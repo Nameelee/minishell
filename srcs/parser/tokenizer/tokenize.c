@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   tokenize.c                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: cbouhadr <cbouhadr@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/24 20:36:54 by cw3l              #+#    #+#             */
-/*   Updated: 2025/05/09 16:10:14 by cbouhadr         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "tokenize.h"
 #include <assert.h>
 #include <errno.h>
@@ -18,7 +6,7 @@
 // --- Forward Declarations for Helpers ---
 static bool is_whitespace(char c);
 static bool is_operator_start(char c);
-static t_token *add_and_advance(t_token **list_head, char *str, size_t len, int token_type, size_t *index);
+//static t_token *add_and_advance(t_token **list_head, char *str, size_t len, int token_type, size_t *index);
 void ft_add_back_node(t_token **lst, t_token *node);
 static int ft_get_token_type_from_str(const char *str); // Needs implementation
 static void free_token_list_on_error(t_token *list); // Simplified cleanup
@@ -72,7 +60,85 @@ static t_token *find_last_node_in_simple_cmd(t_token *command_node) {
     }
     return current;
 }
+/*
+void merge_word_tokens(t_token **token_list_head) { // 또는 void _tokens(...)
+    (void)token_list_head; // 이 함수가 아무 작업도 하지 않도록 함
+    
+    // 디버깅을 위해 이 함수가 호출되었지만 아무것도 안 했음을 알리는 메시지 추가
+    fprintf(stderr, "DEBUG: merge_word_tokens is temporarily a NO-OP (doing nothing).\n");
+    fflush(stderr);
+    
+    return; // 바로 반환하여 아무 병합도 수행하지 않음
+}
+*/
+void merge_word_tokens(t_token **token_list_head) {
+    if (!token_list_head || !*token_list_head) {
+        return;
+    }
 
+    //t_token *prev = NULL; // 이전 토큰을 추적하기 위한 포인터
+    t_token *current = *token_list_head;
+
+    while (current != NULL && current->right != NULL) {
+        t_token *next_node = current->right;
+        bool should_merge = false; // 병합 여부 플래그
+
+        // 기본 병합 조건: 현재와 다음 노드가 모두 WORD이고, 현재 노드 뒤에 공백이 없었음
+        if (current->token == WORD && next_node->token == WORD && !current->followed_by_whitespace) {
+            should_merge = true; // 일단 병합한다고 가정
+
+            // ★★★ 추가된 조건: 이전 토큰(prev)이 리다이렉션 연산자였다면 병합하지 않음 ★★★
+            // 이것은 <file"arg" 같은 경우 file과 arg가 합쳐지는 것을 막기 위함입니다.
+			/*
+            if (prev != NULL &&
+                (prev->token == REDIR_OPEN || prev->token == REDIR_WRITE ||
+                 prev->token == REDIR_WRITE_A || prev->token == HEREDOC)) {
+                should_merge = false; // 병합하지 않음으로 변경
+                fprintf(stderr, "[DEBUG MERGE] PREV_IS_REDIR: Skipping merge for filename candidate [%s] with [%s]\n",
+                        current->string ? current->string : "NULL", next_node->string ? next_node->string : "NULL");
+                fflush(stderr);
+            }
+			*/
+        }
+
+        if (should_merge) {
+            // fprintf(stderr, "[DEBUG MERGE] Merging [%s] with [%s]\n",
+            //         current->string ? current->string : "NULL", next_node->string ? next_node->string : "NULL");
+            // fflush(stderr);
+            
+            size_t current_len = current->string ? strlen(current->string) : 0;
+            size_t next_len = next_node->string ? strlen(next_node->string) : 0;
+            char *merged_string = malloc(current_len + next_len + 1);
+
+            if (!merged_string) {
+                perror("minishell: merge_word_tokens: malloc failed");
+                return; 
+            }
+            merged_string[0] = '\0';
+            if (current->string) strcpy(merged_string, current->string);
+            if (next_node->string) strcat(merged_string, next_node->string);
+            
+            if (current->string) free(current->string);
+            current->string = merged_string;
+            current->followed_by_whitespace = next_node->followed_by_whitespace;
+
+            current->right = next_node->right;
+            if (current->right && current->right->parent == next_node) { // parent 포인터 사용 시
+                 current->right->parent = current;
+            }
+
+            if (next_node->string) free(next_node->string);
+            free(next_node);
+            
+            continue; 
+        }
+        // 병합하지 않으면 prev와 current를 다음으로 이동
+        //prev = current;
+        current = current->right;
+    }
+}
+
+/*
 void merge_word_tokens(t_token **token_list_head) {
     if (!token_list_head || !*token_list_head) {
         return;
@@ -118,6 +184,7 @@ void merge_word_tokens(t_token **token_list_head) {
         current = current->right;
     }
 }
+*/
 
 int ft_count_number_of_arg(char **split)
 {
@@ -533,6 +600,7 @@ static bool is_operator_start(char c) {
 
 // Helper to create token, add to list, and advance index
 // NOTE: Assumes ft_new_token_node duplicates the substring
+/*
 static t_token *add_and_advance(t_token **list_head, char *str_segment, size_t len, int token_type, size_t *index)
 {
     t_token *new_node = ft_new_token_node(str_segment, token_type);
@@ -544,7 +612,7 @@ static t_token *add_and_advance(t_token **list_head, char *str_segment, size_t l
     *index += len;
     return new_node; // Return last added node (might not be needed)
 }
-
+*/
 // Placeholder: You need a robust way to get token type from the string value
 // This is simplified and likely insufficient for differentiating CMD/BUILTIN/WORD reliably here.
 // Inside tokenize.c
@@ -603,226 +671,134 @@ t_token *ft_tokenize(char *str) {
     t_token *token_list = NULL;
     size_t i = 0;
     size_t len;
-    size_t token_start;
-
-    // --- Debug Print: Function Entry ---
-    //fprintf(stderr, "[tokenize DEBUG] Entry: Input string = [%s]\n", str ? str : "NULL");
-    fflush(stderr);
+    // size_t token_start; // 루프 내에서 필요시 정의
 
     if (!str) {
-        //fprintf(stderr, "[tokenize DEBUG] Error: Input string is NULL.\n"); fflush(stderr);
          return NULL;
     }
     len = strlen(str);
 
     while (i < len) {
-        // --- Debug Print: Loop Start ---
-        //fprintf(stderr, "[tokenize DEBUG] Loop Start: i=%zu, current char='%c'\n", i, str[i]);
-        fflush(stderr);
+        size_t token_start;
+        t_token *new_node = NULL; // ★★★ 이번 반복에서 생성될 토큰을 가리킬 포인터, 루프 시작 시 NULL로 초기화
 
-        // 1. Skip whitespace
-        size_t skipped_ws = 0; // Debug
+        // 1. 공백 건너뛰기
         while (i < len && is_whitespace(str[i])) {
             i++;
-            skipped_ws++; // Debug
         }
-         if (skipped_ws > 0) { // Debug
-            //fprintf(stderr, "[tokenize DEBUG] Skipped %zu whitespace characters.\n", skipped_ws); fflush(stderr); // Debug
-         }
         if (i >= len) {
-            //fprintf(stderr, "[tokenize DEBUG] End of string reached after skipping whitespace.\n"); fflush(stderr); // Debug
-             break; // End of string reached
+             break;
         }
 
-        token_start = i;
-        //fprintf(stderr, "[tokenize DEBUG] Token start index set to: %zu\n", token_start); fflush(stderr); // Debug
+        token_start = i; // 실제 토큰 시작 위치
 
-        // 2. Handle Operators
+        // 2. 토큰 유형에 따른 처리 (연산자, 따옴표, 일반 단어)
         if (is_operator_start(str[i])) {
-            //fprintf(stderr, "[tokenize DEBUG] Handling Operator starting with '%c'\n", str[i]); fflush(stderr); // Debug
-            int type;
-            size_t op_len = 1;
-            char op_str[3] = {0}; // Max operator length is 2 + null terminator
+            // ... 연산자 토큰 처리 ...
+            // 이 블록 내에서 new_node = ft_new_token_node(...); 등으로 설정
+            // i 값도 연산자 길이만큼 업데이트
+            // 예시:
+            // char op_str[3] = {0}; // 실제 연산자 문자열
+            // int type; // 실제 연산자 타입
+            // size_t op_len; // 실제 연산자 길이
+            // (op_str, type, op_len 설정 로직)
+            // new_node = ft_new_token_node(op_str, type);
+            // if (!new_node) { /* 에러 처리 및 반환 */ }
+            // ft_add_back_node(&token_list, new_node);
+            // i += op_len;
+            // (기존 코드에서 이 부분을 new_node를 설정하도록 수정)
 
+            // 현재 코드의 add_and_advance를 사용하거나, 아래처럼 직접 처리
+            int type;
+            size_t op_len = 1; // 기본 연산자 길이
+            char op_str[3] = {0}; // 최대 연산자 길이 + 널 문자 고려 (예: ">>")
             op_str[0] = str[i];
-            // Determine operator type and length (same logic as before)
+
             if (i + 1 < len) {
-                if (str[i] == '>' && str[i + 1] == '>') { type = REDIR_WRITE_A; op_len = 2; op_str[1] = '>'; }
-                else if (str[i] == '<' && str[i + 1] == '<') { type = HEREDOC; op_len = 2; op_str[1] = '<'; }
+                if (str[i] == '>' && str[i+1] == '>') { type = REDIR_WRITE_A; op_len = 2; op_str[1] = '>'; }
+                else if (str[i] == '<' && str[i+1] == '<') { type = HEREDOC; op_len = 2; op_str[1] = '<'; }
                 else if (str[i] == '>') { type = REDIR_WRITE; }
                 else if (str[i] == '<') { type = REDIR_OPEN; }
-                else { type = PIPE; }
-            } else {
+                else if (str[i] == '|') { type = PIPE; } // 파이프 연산자도 여기서 처리
+                else { /* 예상치 못한 연산자 시작 문자 처리 (오류 또는 단일 문자 연산자로 간주) */ type = WORD; /* 또는 다른 기본값 */ } // 이 부분은 기존 로직에 맞게 조정
+            } else { // 문자열의 마지막 문자일 경우
                 if (str[i] == '>') type = REDIR_WRITE;
                 else if (str[i] == '<') type = REDIR_OPEN;
-                else type = PIPE;
+                else if (str[i] == '|') type = PIPE;
+                else { type = WORD; } // 이 부분은 기존 로직에 맞게 조정
             }
+            // op_str이 실제로 채워졌는지 확인 (예: op_str[1]이 설정된 경우)
+            // 여기서는 op_len 기준으로 new_node 생성
 
-            //fprintf(stderr, "[tokenize DEBUG] Operator identified: Type=%d, Length=%zu, Str=[%.*s]\n", type, op_len, (int)op_len, op_str); fflush(stderr); // Debug
+            new_node = ft_new_token_node(op_str, type); // op_str은 실제 연산자 문자열 ("<", ">>" 등)
+            if (!new_node) { free_token_list_on_error(token_list); return NULL; }
+            ft_add_back_node(&token_list, new_node);
+            i += op_len; // 연산자 길이만큼 i 증가
 
-            // Use add_and_advance or manual addition for operators
-            // Using add_and_advance as example:
-            if (!add_and_advance(&token_list, op_str, op_len, type, &i)) {
-                // --- Debug Print: Error Point ---
-                //fprintf(stderr, "[tokenize DEBUG] Error: add_and_advance failed for operator. Returning NULL.\n"); fflush(stderr);
-                free_token_list_on_error(token_list);
-                return NULL; // Allocation error
-            }
-            //fprintf(stderr, "[tokenize DEBUG] Operator added. New index i=%zu\n", i); fflush(stderr); // Debug
-        }
-  
-        //3. Handle Quotes
-        else if (str[i] == '"' || str[i] == '\'') {
+
+        } else if (str[i] == '"' || str[i] == '\'') {
+            // ... 따옴표로 묶인 토큰 처리 ...
+            // 이 블록 내에서 new_node = ft_new_token_node(...); 등으로 설정
+            // i 값도 닫는 따옴표 다음으로 업데이트
+            // (기존 코드에서 이 부분을 new_node를 설정하도록 수정)
             char quote_char = str[i];
-            //fprintf(stderr, "[tokenize DEBUG] Handling Quoted String starting with '%c'\n", quote_char); fflush(stderr); // Debug
             size_t j = i + 1;
-
             while (j < len && str[j] != quote_char) {
-                // Add handling for escaped quotes if needed:
-                // if (str[j] == '\\' && j + 1 < len) j++; // Skip next char
                 j++;
             }
+            if (j >= len) { /* 미종료 따옴표 오류 처리 */ free_token_list_on_error(token_list); return NULL; }
 
-            if (j >= len) { // Unmatched quote
-                // --- Debug Print: Error Point ---
-                //fprintf(stderr, "[tokenize DEBUG] Error: Unmatched quote '%c'. Returning NULL.\n", quote_char); fflush(stderr);
-                free_token_list_on_error(token_list);
-                return NULL;
-            }
+            size_t content_start = token_start + 1;
+            size_t content_len = j - content_start;
+            char *content_str = ft_substr(str, content_start, content_len);
+            if (!content_str) { /* 메모리 할당 오류 처리 */ free_token_list_on_error(token_list); return NULL; }
 
-            //  !!!! cedric comment for test qnd keep quote in HELLO="123 A-" 
-            
-			// Calculate the start and length of the content *inside* the quotes
-			size_t content_start = token_start + 1; // Start after the opening quote
-			size_t content_len = j - content_start; // Length is difference between closing quote index and content start index
+            new_node = ft_new_token_node(content_str, WORD); // 따옴표 안의 내용은 WORD
+            free(content_str);
+            if (!new_node) { /* 메모리 할당 오류 처리 */ free_token_list_on_error(token_list); return NULL; }
+            ft_add_back_node(&token_list, new_node);
+            i = j + 1; // 닫는 따옴표 다음으로 i 이동
 
-			// Extract the content string (without quotes)
-			char *content_str = ft_substr(str, content_start, content_len);
-
-			if (!content_str) { // Check if ft_substr failed (e.g., malloc error)
-				// fprintf(stderr, "[tokenize DEBUG] Error: ft_substr failed for quoted string content. Returning NULL.\n"); fflush(stderr);
-				free_token_list_on_error(token_list);
-				return NULL;
-			}
-
-			// Create a new token node with the extracted content
-			// NOTE: Even if content_len is 0 (e.g., for ''), ft_substr should return an empty string "",
-			// and we create a WORD token with that empty string. This matches bash behavior.
-			t_token *new_node = ft_new_token_node(content_str, WORD);
-			free(content_str); // ft_new_token_node should duplicate the string, so we free the substr result
-
-			if (!new_node) {
-				// fprintf(stderr, "[tokenize DEBUG] Error: ft_new_token_node failed for quoted string. Returning NULL.\n"); fflush(stderr);
-				free_token_list_on_error(token_list);
-				return NULL;
-			}
-
-			// Add the new token to the list
-			ft_add_back_node(&token_list, new_node);
-
-			// Advance the main index 'i' past the closing quote
-			i = j + 1;
-        }
-
-
-        
-        // 4. Handle General Words
-        else {
-            //fprintf(stderr, "[tokenize DEBUG] Handling General Word starting at index %zu ('%c')\n", i, str[i]); fflush(stderr); // Debug
+        } else { // 일반 단어
+            // ... 일반 단어 토큰 처리 ...
+            // 이 블록 내에서 new_node = ft_new_token_node(...); 등으로 설정
+            // i 값도 단어의 끝 다음으로 업데이트
+            // (기존 코드에서 이 부분을 new_node를 설정하도록 수정)
             size_t j = i;
             while (j < len && !is_whitespace(str[j]) && !is_operator_start(str[j]) && str[j] != '"' && str[j] != '\'') {
                 j++;
             }
             size_t token_len = j - token_start;
-            //fprintf(stderr, "[tokenize DEBUG] Word ends at j=%zu. Token length=%zu\n", j, token_len); fflush(stderr); // Debug
+            // if (token_len == 0) { i = j; continue; } // 0 길이 토큰은 스킵 (이론상 발생 안 함)
 
-             // Handle zero-length token case if necessary (shouldn't happen with current logic)
-             if (token_len == 0) {
-                //fprintf(stderr, "[tokenize DEBUG] Warning: Zero-length word detected at index %zu. Skipping.\n", i); fflush(stderr);
-                 i = j; // Advance index
-                 continue; // Skip adding zero-length token
-             }
-			//fprintf(stderr, "[DEBUG] Attempting ft_substr len %zu from index %zu\n", token_len, token_start); // DEBUG
             char *token_str = ft_substr(str, token_start, token_len);
-            if (!token_str) {
-			perror("[ERROR] ft_substr failed for word"); // Use perror if ft_substr sets errno, otherwise fprintf stderr
-			//fprintf(stderr, "[tokenize DEBUG] Error: ft_substr returned NULL.\n");
-			fflush(stderr);
-			// Ensure cleanup is robust before returning
-			free_token_list_on_error(token_list); // Make sure this frees the partial list
-			return NULL; // Check IMMEDIATELY
-			}
-			//fprintf(stderr, "[DEBUG] ft_substr OK: [%s] at %p\n", token_str, (void*)token_str); // DEBUG
-			// ... rest of processing token_str ...
+            if (!token_str) { /* 메모리 할당 오류 */ free_token_list_on_error(token_list); return NULL; }
 
             int type = ft_get_token_type_from_str(token_str);
-            //fprintf(stderr, "[tokenize DEBUG] Word type determined as: %d\n", type); fflush(stderr); // Debug
-
-            t_token *new_node = ft_new_token_node(token_str, type);
-            free(token_str); // Free substring
-            if (!new_node) {
-                // --- Debug Print: Error Point ---
-                //fprintf(stderr, "[tokenize DEBUG] Error: ft_new_token_node failed for word string. Returning NULL.\n"); fflush(stderr);
-                free_token_list_on_error(token_list);
-                return NULL;
-            }
+            new_node = ft_new_token_node(token_str, type);
+            free(token_str);
+            if (!new_node) { /* 메모리 할당 오류 */ free_token_list_on_error(token_list); return NULL; }
             ft_add_back_node(&token_list, new_node);
-            i = j;
-
-			// --- ▼▼▼ 여기에 공백 확인 코드 추가 ▼▼▼ ---
-            // 방금 추가된 new_node의 플래그를 설정합니다.
-            // 업데이트된 인덱스 i가 문자열 범위 내에 있고, 해당 문자가 공백인지 확인합니다.
-            if (i < len && is_whitespace(str[i])) {
-                new_node->followed_by_whitespace = true;
-                // fprintf(stderr, "[DEBUG] Token [%s] followed by whitespace.\n", new_node->string); // 디버깅 출력
-            } else {
-                // 문자열 끝이거나 다음 문자가 공백이 아닌 경우
-                // new_node 생성 시 이미 false로 초기화되었으므로 이 else는 생략 가능하나, 명확성을 위해 추가할 수 있습니다.
-                new_node->followed_by_whitespace = false;
-                // fprintf(stderr, "[DEBUG] Token [%s] NOT followed by whitespace or is EOS.\n", new_node->string); // 디버깅 출력
-            }
-            // --- ▲▲▲ 공백 확인 코드 끝 ▲▲▲ ---
-            //fprintf(stderr, "[tokenize DEBUG] Word added. New index i=%zu\n", i); fflush(stderr); // Debug
+            i = j; // 단어의 끝 다음으로 i 이동
         }
-        fflush(stderr); // Ensure output is seen immediately
-    } // end while
 
-    // --- Debug Print: Function Exit ---
-    //fprintf(stderr, "[tokenize DEBUG] Successfully finished tokenization. Returning list head: %p\n", (void*)token_list);
-    fflush(stderr);
+        // ★★★ 이 부분이 핵심 ★★★
+        // 위 if/else if/else 블록 중 하나에서 new_node가 성공적으로 생성되었다면,
+        // (그리고 i가 다음 처리 시작 위치로 업데이트 되었다면)
+        // 그 new_node에 대해 followed_by_whitespace 플래그를 설정합니다.
+        if (new_node) { // new_node가 NULL이 아닌 경우 (즉, 토큰이 성공적으로 생성된 경우)
+            if (i < len && is_whitespace(str[i])) { // 현재 i 위치 (토큰 바로 다음 문자)가 공백인지 확인
+                new_node->followed_by_whitespace = true;
+            } else {
+                new_node->followed_by_whitespace = false;
+            }
+        }
+        // (디버깅 프린트는 필요시 여기에 둘 수 있습니다)
 
-    // Print final list (optional, keep if needed)
-    //fprintf(stderr, "--- New Tokenizer Final Token List ---\n");
-    t_token *dbg_node = token_list;
-    while (dbg_node) {
-        //fprintf(stderr, "Type: %d, String: [%s]\n", dbg_node->token, dbg_node->string ? dbg_node->string : "NULL");
-        dbg_node = dbg_node->right;
-    }
-    //fprintf(stderr, "--- End New Tokenizer Token List ---\n"); fflush(stderr);
+    } // end while (i < len)
 
     return token_list;
 }
-
-// --- Operator Node Handling Helper ---
-// Handles PIPE, REDIR_*, HEREDOC. Updates root via root_ptr.
-// Consumes target/delimiter from token_list_ptr if needed.
-// Returns new root on success, NULL on error.
-
-/*
-static t_token *handle_operator_node(t_token *op_node, t_token **root_ptr) {
-    t_token *current_root = *root_ptr;
-
-    // Operator becomes the new root, previous root becomes left child
-    op_node->left = current_root;
-    if (current_root) {
-        current_root->parent = op_node;
-    }
-    *root_ptr = op_node; // Update the root pointer in the caller
-
-    // Pipe's right child is linked later when the next command/operand arrives
-    return *root_ptr; // Return the new root
-}
-*/
 
 t_token *ft_create_ast(t_token *token_list_head) {
     t_token *ast_root = NULL; // 전체 AST의 최종 루트
@@ -865,6 +841,10 @@ t_token *ft_create_ast(t_token *token_list_head) {
                 fprintf(stderr, "minishell: syntax error near `%s' (missing filename)\n", operator_node->string);
                 free_ast_recursive(ast_root); free_single_token_node_content(operator_node); return NULL;
             }
+
+
+
+			
             t_token *filename_node = flat_iterator;
             flat_iterator = flat_iterator->right; // 파일 이름 토큰 소비
 
