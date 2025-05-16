@@ -6,7 +6,7 @@
 /*   By: cbouhadr <cbouhadr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/25 11:52:00 by cw3l              #+#    #+#             */
-/*   Updated: 2025/04/09 14:52:05 by cbouhadr         ###   ########.fr       */
+/*   Updated: 2025/05/15 14:10:13 by cbouhadr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,9 @@ typedef struct s_token
     struct s_token  *right;
     struct s_token  *left;
 	int             heredoc_pipe_fd; // Stores read end of pipe for <<, -1 initially
-	t_heredoc_state heredoc_state; // Tracks the processing state
+	int             single_quote;
+    int             double_quote;
+    t_heredoc_state heredoc_state; // Tracks the processing state
 } t_token;
 
 // Structure to hold a list of redirections

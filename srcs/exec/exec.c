@@ -370,111 +370,52 @@ static char **build_argv_from_ast(t_token *cmd_node) {
 
 // --- Revised ft_execute_builtin ---
 
-// This function now runs in the child process after redirections are set.
-// It should exit the child process with the builtin's status code.
 int ft_execute_builtin(t_token *node, char ***envp_ptr) {
-    // 1. Build initial argv (potentially with quotes) from AST
-    char **original_argv = build_argv_from_ast(node);
-    char **current_envp = envp_ptr ? *envp_ptr : NULL;
-    int exit_status = 1; // Default error status
-    char **processed_argv = NULL; // Will hold argv with quotes removed
-    int argc = 0;
 
-    // Check if original_argv build failed or command is somehow empty
+    int squote;
+    int dquote;
+    int exit_status;
+    char **original_argv;
+    
+    exit_status = 1;
+    dquote = 0;
+    squote = 0;
+    original_argv = build_argv_from_ast(node);
     if (!original_argv || !original_argv[0]) {
-        //fprintf(stderr, "minishell: cannot execute empty command or argv build failed\n");
-        if(original_argv) free(original_argv); // Free the array structure if it exists
-        return(1); // Exit child with error
-    }
-
-    // --- 2. Process arguments for quote removal ---
-    // Count arguments
-    while(original_argv[argc] != NULL) {
-        argc++;
-    }
-
-    // Allocate new argv array for processed arguments
-    processed_argv = (char **)malloc(sizeof(char *) * (argc + 1));
-    if (!processed_argv) {
-        perror("minishell: malloc error for processed argv");
-        free(original_argv); // Free original argv array structure
+        
+        if(original_argv) free(original_argv);
         return(1);
     }
+    if (strcmp(original_argv[0], "echo") == 0) {
 
-    // Copy command name (no quote removal needed)
-	processed_argv[0] = ft_strdup(original_argv[0]);
-	if (!processed_argv[0]) {
-        perror("minishell: strdup failed for command name in builtin");
-        free(processed_argv);
-        free(original_argv);
-        return(1);
-        }
-
-    // Process each argument
-    for (int i = 1; i < argc; i++) {
-        // IMPORTANT: Only remove quotes if it's an argument, not special redirection targets
-        // Assuming build_argv_from_ast only includes actual command arguments here.
-        processed_argv[i] = remove_surrounding_quotes(original_argv[i]);
-        if (!processed_argv[i]) {
-             perror("minishell: malloc error during quote removal");
-             // Cleanup partially created processed_argv
-             for (int j = 1; j < i; j++) free(processed_argv[j]);
-             free(processed_argv);
-             free(original_argv); // Free original argv array structure
-             // If you strdup'd argv[0], free it too.
-             return(1);
-        }
+        // cedric add get the single quote and double quote in node.right
+        
+        squote = node->right->single_quote;
+        dquote = node->right->double_quote;
+        exit_status = ft_echo(original_argv, squote, dquote , *envp_ptr); // Call ft_echo with quote-removed args
     }
-
-
-
-
-    processed_argv[argc] = NULL; // Null-terminate the processed array
-
-
-    
-    // --- 3. Dispatch based on command name (using processed_argv) ---
-    // IMPORTANT: Use processed_argv[0] for strcmp and pass processed_argv to handlers
-    if (strcmp(processed_argv[0], "echo") == 0) {
-        exit_status = ft_echo(processed_argv, 1, current_envp); // Call ft_echo with quote-removed args
-    }
-    // --- Add other builtins similarly ---
-    else if (strcmp(processed_argv[0], "pwd") == 0) {
-        exit_status = ft_pwd(processed_argv); // Pass processed args
-    }
-    else if (strcmp(processed_argv[0], "env") == 0) {
-        exit_status = ft_env(processed_argv, &current_envp); // Pass processed args
-    }
-    else if (strcmp(processed_argv[0], "cd") == 0) {
-        exit_status = ft_cd(processed_argv); // Pass processed args
-    }
-    else if (strcmp(processed_argv[0], "export") == 0) {
-        exit_status = ft_export(&current_envp,processed_argv); // Pass processed args
-    }
-    
-    else if (strcmp(processed_argv[0], "unset") == 0) {
-        exit_status = ft_unset(processed_argv, &current_envp); // Pass processed args
-    }
-    else if (strcmp(processed_argv[0], "exit") == 0) {
-        ft_exit(processed_argv, current_envp); // Pass processed args
-    }
-    // --- Builtins that MUST run in parent ---
-    else {
-        //fprintf(stderr, "minishell: builtin '%s' not implemented or not found\n", processed_argv[0]);
+    else if (strcmp(original_argv[0], "pwd") == 0)
+        exit_status = ft_pwd(original_argv); // Pass processed args
+    else if (strcmp(original_argv[0], "env") == 0)
+        exit_status = ft_env(original_argv, envp_ptr); // Pass processed args
+    else if (strcmp(original_argv[0], "cd") == 0)
+        exit_status = ft_cd(original_argv); // Pass processed args
+    else if (strcmp(original_argv[0], "export") == 0) 
+        exit_status = ft_export(envp_ptr, original_argv); // Pass processed args
+    else if (strcmp(original_argv[0], "unset") == 0)
+        exit_status = ft_unset(original_argv, envp_ptr); // Pass processed args
+    else if (strcmp(original_argv[0], "exit") == 0)
+        ft_exit(original_argv);
+    else
         exit_status = 127;
+    int i;
+
+    i = 0;
+    while (original_argv[i])
+    {
+        free(original_argv[i++]);
     }
-    // --- 4. Cleanup ---
-    // Free the processed arguments (results from remove_surrounding_quotes)
-    // Skip index 0 if you didn't duplicate it.
-    for (int i = 1; i < argc; i++) {
-        free(processed_argv[i]);
-    }
-    // Free the processed_argv array structure
-    free(processed_argv);
     free(original_argv);
-
-
-    // --- 5. Exit child process ---
     return(exit_status);
 }
 
@@ -488,198 +429,204 @@ bool is_state_modifying_builtin(const char *cmd_name) {
 }
 
 // execute_ast 함수 (디버깅 프린트 보강)
-void execute_ast(t_token *node, char ***envp, bool is_top_level) {
-    if (!node) {
-        if (is_top_level) g_exit_status = 0; // 최상위 호출에서 노드가 없으면 성공으로 간주 (예: 빈 입력)
-        // 재귀 호출 시 node가 NULL이면 호출한 쪽에서 처리 후 exit해야 함
+void execute_ast(t_token *node, char ***envp, bool is_top_level) 
+{
+    if (!node) 
+    {
+        //if (is_top_level) g_exit_status = 0; // 최상위 호출에서 노드가 없으면 성공으로 간주 (예: 빈 입력)
         return;
     }
 
-    if (is_top_level) {
-        // --- 1. 최상위 호출일 때 ---
-        if (preprocess_heredocs(node) == -1) {
-            close_all_heredoc_fds_in_tree(node);
-            g_exit_status = 1; 
-            fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Heredoc preprocess failed. g_exit_status set to %d.\n", getpid(), g_exit_status);
-            fflush(stderr);
-            return;
-        }
+    if (node->token == BUILTIN) {
+        // ft_execute_builtin 호출 (이 함수가 내부에서 exit() 함)
+        
+        int r = ft_execute_builtin(node, envp);
+        // 아래는 도달하면 안 됨
+        g_exit_status = r;
+    }
+    else
+    {
+        
+        if (is_top_level) {
+            // --- 1. 최상위 호출일 때 ---
+            if (preprocess_heredocs(node) == -1) {
+                close_all_heredoc_fds_in_tree(node);
+                g_exit_status = 1; 
+                //fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Heredoc preprocess failed. g_exit_status set to %d.\n", getpid(), g_exit_status);
+                fflush(stderr);
+                return;
+            }
 
-        pid_t pid_c1 = fork();
+            pid_t pid_c1 = fork();
 
-        if (pid_c1 == -1) {
-            perror("fork (execute_ast top level)");
-            close_all_heredoc_fds_in_tree(node);
-            g_exit_status = 1; 
-            fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Fork failed. g_exit_status set to %d.\n", getpid(), g_exit_status);
-            fflush(stderr);
-            return;
-        }
+            if (pid_c1 == -1) {
+                perror("fork (execute_ast top level)");
+                close_all_heredoc_fds_in_tree(node);
+                g_exit_status = 1; 
+                //fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Fork failed. g_exit_status set to %d.\n", getpid(), g_exit_status);
+                fflush(stderr);
+                return;
+            }
 
-        if (pid_c1 == 0) {
-            // --- 자식 프로세스 (C1) ---
-            execute_ast(node, envp, false); // 재귀 호출 (실제 실행 담당)
-            exit(EXIT_FAILURE); 
-        } else {
-            // --- 부모 프로세스 (메인 쉘) ---
-            close_all_heredoc_fds_in_tree(node);
-
-            int status_of_c1;
-            waitpid(pid_c1, &status_of_c1, 0);
-
-            int actual_c1_exit_code = 0;
-            if (WIFEXITED(status_of_c1)) {
-                actual_c1_exit_code = WEXITSTATUS(status_of_c1);
-            } else if (WIFSIGNALED(status_of_c1)) {
-                actual_c1_exit_code = 128 + WTERMSIG(status_of_c1);
-                if (WTERMSIG(status_of_c1) == SIGINT) { fprintf(stderr, "\n"); }
-                else if (WTERMSIG(status_of_c1) == SIGQUIT) { fprintf(stderr, "Quit: %d\n", WTERMSIG(status_of_c1)); }
+            if (pid_c1 == 0) {
+                // --- 자식 프로세스 (C1) ---
+                execute_ast(node, envp, false); // 재귀 호출 (실제 실행 담당)
+                exit(EXIT_FAILURE); 
             } else {
-                actual_c1_exit_code = 255; 
-                fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Child_C1 (PID %d) terminated abnormally (Raw_status=%d).\n", getpid(), pid_c1, status_of_c1);
+                // --- 부모 프로세스 (메인 쉘) ---
+                close_all_heredoc_fds_in_tree(node);
+
+                int status_of_c1;
+                waitpid(pid_c1, &status_of_c1, 0);
+
+                int actual_c1_exit_code = 0;
+                if (WIFEXITED(status_of_c1)) {
+                    actual_c1_exit_code = WEXITSTATUS(status_of_c1);
+                } else if (WIFSIGNALED(status_of_c1)) {
+                    actual_c1_exit_code = 128 + WTERMSIG(status_of_c1);
+                    if (WTERMSIG(status_of_c1) == SIGINT) { fprintf(stderr, "\n"); }
+                    else if (WTERMSIG(status_of_c1) == SIGQUIT) { fprintf(stderr, "Quit: %d\n", WTERMSIG(status_of_c1)); }
+                } else {
+                    actual_c1_exit_code = 255; 
+                    //fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Child_C1 (PID %d) terminated abnormally (Raw_status=%d).\n", getpid(), pid_c1, status_of_c1);
+                    fflush(stderr);
+                }
+                g_exit_status = actual_c1_exit_code;
+                //fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Child_C1_PID=%d finished. Raw_status_C1=%d. Calculated_exit_code=%d. g_exit_status is now set to %d.\n",
+                //        getpid(), pid_c1, status_of_c1, actual_c1_exit_code, g_exit_status);
                 fflush(stderr);
             }
-            g_exit_status = actual_c1_exit_code;
-            fprintf(stderr, "[PID %d] DEBUG_MAIN_SHELL_TOP_LEVEL: Child_C1_PID=%d finished. Raw_status_C1=%d. Calculated_exit_code=%d. g_exit_status is now set to %d.\n",
-                    getpid(), pid_c1, status_of_c1, actual_c1_exit_code, g_exit_status);
-            fflush(stderr);
-        }
-    } else {
-        // --- 2. 재귀 호출일 경우 (is_top_level == false) ---
-        // 이 블록은 자식 프로세스(C1 또는 그 자식) 내부에서 실행됨
-
-        // ▼▼▼ 블록 진입 확인 (가장 먼저 실행되어야 할 디버그 프린트) ▼▼▼
-        fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Entered. Node type: %d, Node string: [%s]\n", 
-                getpid(), node->token, node->string ? node->string : "NULL_STRING");
-        fflush(stderr);
-        // ▲▲▲ ▲▲▲ ▲▲▲
-
-        t_redir *redir_list = NULL;
-        t_token *command_node = node; 
-
-        // --- Step 1: 리다이렉션 정보 추출 ---
-        int redir_loop_count = 0;
-        fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Starting redirection extraction loop. Initial command_node: %p (type: %d, str: [%s])\n", 
-                getpid(), (void *)command_node, command_node ? command_node->token : -1, command_node && command_node->string ? command_node->string : "NULL_STRING" );
-        fflush(stderr);
-
-        while (command_node && (command_node->token == REDIR_OPEN ||
-                                command_node->token == REDIR_WRITE ||
-                                command_node->token == REDIR_WRITE_A ||
-                                command_node->token == HEREDOC))
-        {
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: In redir extraction loop iter %d. command_node type: %d, string: [%s]\n", 
-                    getpid(), redir_loop_count, command_node->token, command_node->string ? command_node->string : "NULL_STRING");
-            
-            if (!command_node->right || !command_node->right->string) {
-                fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Syntax error near redirection (missing filename/delimiter for token string [%s]). Exiting.\n", 
-                        getpid(), command_node->string ? command_node->string : "NULL_STRING");
-                fflush(stderr);
-                exit(1); 
-            }
-            // filename/delimiter가 있는지 확인 후 출력
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Redir Op [%s], Filename/Delimiter is [%s]\n",
-                    getpid(), command_node->string, command_node->right->string);
-            fflush(stderr);
-
-            add_redirection_to_list(&redir_list, command_node->token, command_node->right->string, (command_node->token == HEREDOC) ? command_node : NULL);
-            
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Added redir type %d. Moving to command_node->left.\n", 
-                    getpid(), command_node->token);
-            fflush(stderr);
-            command_node = command_node->left; 
-            redir_loop_count++;
-        }
-        fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Finished redirection extraction loop. Final command_node: %p (type: %d, str: [%s])\n", 
-                getpid(), (void *)command_node, command_node ? command_node->token : -1, command_node && command_node->string ? command_node->string : "NULL_STRING");
-        fflush(stderr);
-        
-        // --- apply_redirections 호출 전 디버그 프린트 ---
-        fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Before calling apply_redirections. redir_list pointer is: %p\n", getpid(), (void *)redir_list);
-        if (redir_list) {
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: First redir item - Type: %d (Filename: [%s])\n", 
-                    getpid(), redir_list->type, 
-                    redir_list->filename ? redir_list->filename : "NULL_FILENAME");
         } else {
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: redir_list is NULL.\n", getpid());
-        }
-        fflush(stderr);
-        // --- ---
+            // --- 2. 재귀 호출일 경우 (is_top_level == false) ---
+            // 이 블록은 자식 프로세스(C1 또는 그 자식) 내부에서 실행됨
 
-        // --- Step 2: 리다이렉션 적용 ---
-        if (apply_redirections(redir_list) == -1) {
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: apply_redirections failed. Exiting.\n", getpid());
+            // ▼▼▼ 블록 진입 확인 (가장 먼저 실행되어야 할 디버그 프린트) ▼▼▼
+            //fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Entered. Node type: %d, Node string: [%s]\n", 
+            //        getpid(), node->token, node->string ? node->string : "NULL_STRING");
             fflush(stderr);
+            // ▲▲▲ ▲▲▲ ▲▲▲
+
+            t_redir *redir_list = NULL;
+            t_token *command_node = node; 
+
+            // --- Step 1: 리다이렉션 정보 추출 ---
+            int redir_loop_count = 0;
+            //fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Starting redirection extraction loop. Initial command_node: %p (type: %d, str: [%s])\n", 
+            //        getpid(), (void *)command_node, command_node ? command_node->token : -1, command_node && command_node->string ? command_node->string : "NULL_STRING" );
+            fflush(stderr);
+
+            while (command_node && (command_node->token == REDIR_OPEN ||
+                                    command_node->token == REDIR_WRITE ||
+                                    command_node->token == REDIR_WRITE_A ||
+                                    command_node->token == HEREDOC))
+            {
+            //    fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: In redir extraction loop iter %d. command_node type: %d, string: [%s]\n", 
+            //            getpid(), redir_loop_count, command_node->token, command_node->string ? command_node->string : "NULL_STRING");
+                
+                if (!command_node->right || !command_node->right->string) {
+            //        fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Syntax error near redirection (missing filename/delimiter for token string [%s]). Exiting.\n", 
+            //                getpid(), command_node->string ? command_node->string : "NULL_STRING");
+                    fflush(stderr);
+                    exit(1); 
+                }
+                // filename/delimiter가 있는지 확인 후 출력
+            //    fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Redir Op [%s], Filename/Delimiter is [%s]\n",
+            //            getpid(), command_node->string, command_node->right->string);
+                fflush(stderr);
+
+                add_redirection_to_list(&redir_list, command_node->token, command_node->right->string, (command_node->token == HEREDOC) ? command_node : NULL);
+                
+            //    fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Added redir type %d. Moving to command_node->left.\n", 
+            //            getpid(), command_node->token);
+                fflush(stderr);
+                command_node = command_node->left; 
+                redir_loop_count++;
+            }
+            //fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Finished redirection extraction loop. Final command_node: %p (type: %d, str: [%s])\n", 
+            //        getpid(), (void *)command_node, command_node ? command_node->token : -1, command_node && command_node->string ? command_node->string : "NULL_STRING");
+            fflush(stderr);
+            
+            // --- apply_redirections 호출 전 디버그 프린트 ---
+            //fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Before calling apply_redirections. redir_list pointer is: %p\n", getpid(), (void *)redir_list);
+            // if (redir_list) {
+            //     fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: First redir item - Type: %d (Filename: [%s])\n", 
+            //             getpid(), redir_list->type, 
+            //             redir_list->filename ? redir_list->filename : "NULL_FILENAME");
+            // } else {
+            //     fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: redir_list is NULL.\n", getpid());
+            // }
+            // fflush(stderr);
+            // --- ---
+
+            // --- Step 2: 리다이렉션 적용 ---
+            if (apply_redirections(redir_list) == -1) {
+                //fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: apply_redirections failed. Exiting.\n", getpid());
+                fflush(stderr);
+                free_redir_list(redir_list); 
+                exit(EXIT_FAILURE); 
+            }
             free_redir_list(redir_list); 
-            exit(EXIT_FAILURE); 
-        }
-        free_redir_list(redir_list); 
 
-        // --- Step 4: 명령어 노드 실행 ---
-        if (!command_node) {
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: No command_node after redirections. Exiting with SUCCESS.\n", getpid());
-            fflush(stderr);
-            exit(EXIT_SUCCESS); 
-        }
-        
-        fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Dispatching command_node. Type: %d, String: [%s]\n", 
-                getpid(), command_node->token, command_node->string ? command_node->string : "NULL_STRING");
-        fflush(stderr);
-
-        if (command_node->token == PIPE) {
-            int pipeline_exit_status = execute_pipe(command_node, envp);
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE(PIPE): Pipeline status received: %d. This process exiting with this.\n", getpid(), pipeline_exit_status);
-            fflush(stderr);
-            exit(pipeline_exit_status);
-        }
-        else if (command_node->token == BUILTIN) {
-            int builtin_status = ft_execute_builtin(command_node, envp);
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE(BUILTIN): ft_execute_builtin returned %d. Exiting with this status.\n", getpid(), builtin_status);
-            fflush(stderr);
-            exit(builtin_status);
-        }
-        else if (command_node->token == CMD || command_node->token == WORD )
-        {
-            // 외부 명령어 실행 로직
-            char **original_argv = build_argv_from_ast(command_node);
-            char **processed_argv = NULL; // $? 등 확장 및 따옴표 최종 제거된 argv
-            int argc = 0;
-
-            if (!original_argv || !original_argv[0]) { if(original_argv) free(original_argv); exit(127); }
-            while(original_argv[argc] != NULL) argc++;
-
-            processed_argv = (char **)malloc(sizeof(char *) * (argc + 1));
-            if (!processed_argv) { perror("malloc processed_argv (external)"); free(original_argv); exit(EXIT_FAILURE); }
-            
-            // 명령어 이름은 보통 확장/따옴표 제거 대상이 아니지만, 일관성을 위해 strdup 또는 확장 처리
-            processed_argv[0] = ft_strdup(original_argv[0]); // 안전하게 복사
-            if (!processed_argv[0] && original_argv[0]) { /* malloc 에러 처리 */ }
-
-            for (int k = 1; k < argc; k++) {
-                char *temp_arg = remove_surrounding_quotes(original_argv[k]);
-                if (!temp_arg) { /* 에러 처리 및 이전 할당 해제 */ }
-                // 여기에 $? 확장 함수 호출 추가: processed_argv[k] = expand_parameters(temp_arg, g_exit_status);
-                // 지금은 $? 확장이 없으므로, 일단 remove_surrounding_quotes 결과만 사용
-                processed_argv[k] = temp_arg; 
-                // free(temp_arg); // expand_parameters가 temp_arg를 쓰고 새 문자열 반환 시 해제
+            // --- Step 4: 명령어 노드 실행 ---
+            if (!command_node) {
+                //fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: No command_node after redirections. Exiting with SUCCESS.\n", getpid());
+                fflush(stderr);
+                exit(EXIT_SUCCESS); 
             }
-            processed_argv[argc] = NULL;
-
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Executing external command: [%s]\n", getpid(), processed_argv[0]); fflush(stderr);
-            execvp(processed_argv[0], processed_argv); // envp는 execvp가 알아서 현재 환경 사용
             
-            perror(processed_argv[0]); // execvp 실패 시에만 실행됨
-            // Cleanup on execvp error
-            if (processed_argv[0] != original_argv[0]) free(processed_argv[0]); // strdup 했을 경우
-            for (int k = 1; k < argc; k++) if(processed_argv[k]) free(processed_argv[k]);
-            free(processed_argv); 
-            free(original_argv);
-            exit(127); 
-
-        } else {
-            fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Invalid command node type %d. Exiting.\n", getpid(), command_node->token);
+            //fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Dispatching command_node. Type: %d, String: [%s]\n", 
+            //        getpid(), command_node->token, command_node->string ? command_node->string : "NULL_STRING");
             fflush(stderr);
-            exit(EXIT_FAILURE);
+
+            if (command_node->token == PIPE) {
+                int pipeline_exit_status = execute_pipe(command_node, envp);
+            //    fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE(PIPE): Pipeline status received: %d. This process exiting with this.\n", getpid(), pipeline_exit_status);
+                fflush(stderr);
+                exit(pipeline_exit_status);
+            }
+            else if (command_node->token == CMD || command_node->token == WORD )
+            {
+                // 외부 명령어 실행 로직
+                char **original_argv = build_argv_from_ast(command_node);
+                char **processed_argv = NULL; // $? 등 확장 및 따옴표 최종 제거된 argv
+                int argc = 0;
+
+                if (!original_argv || !original_argv[0]) { if(original_argv) free(original_argv); exit(127); }
+                while(original_argv[argc] != NULL) argc++;
+
+                processed_argv = (char **)malloc(sizeof(char *) * (argc + 1));
+                if (!processed_argv) { perror("malloc processed_argv (external)"); free(original_argv); exit(EXIT_FAILURE); }
+                
+                // 명령어 이름은 보통 확장/따옴표 제거 대상이 아니지만, 일관성을 위해 strdup 또는 확장 처리
+                processed_argv[0] = ft_strdup(original_argv[0]); // 안전하게 복사
+                if (!processed_argv[0] && original_argv[0]) { /* malloc 에러 처리 */ }
+
+                for (int k = 1; k < argc; k++) {
+                    char *temp_arg = remove_surrounding_quotes(original_argv[k]);
+                    if (!temp_arg) { /* 에러 처리 및 이전 할당 해제 */ }
+                    // 여기에 $? 확장 함수 호출 추가: processed_argv[k] = expand_parameters(temp_arg, g_exit_status);
+                    // 지금은 $? 확장이 없으므로, 일단 remove_surrounding_quotes 결과만 사용
+                    processed_argv[k] = temp_arg; 
+                    // free(temp_arg); // expand_parameters가 temp_arg를 쓰고 새 문자열 반환 시 해제
+                }
+                processed_argv[argc] = NULL;
+
+            //    fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Executing external command: [%s]\n", getpid(), processed_argv[0]); fflush(stderr);
+                execvp(processed_argv[0], processed_argv); // envp는 execvp가 알아서 현재 환경 사용
+                
+                perror(processed_argv[0]); // execvp 실패 시에만 실행됨
+                // Cleanup on execvp error
+                if (processed_argv[0] != original_argv[0]) free(processed_argv[0]); // strdup 했을 경우
+                for (int k = 1; k < argc; k++) if(processed_argv[k]) free(processed_argv[k]);
+                free(processed_argv); 
+                free(original_argv);
+                exit(127); 
+
+            } else {
+            //    fprintf(stderr, "[PID %d] DEBUG_EXEC_AST_RECURSIVE: Invalid command node type %d. Exiting.\n", getpid(), command_node->token);
+                fflush(stderr);
+                exit(EXIT_FAILURE);
+            }
         }
-    } // End of else (!is_top_level)
+    }
 } // End of execute_ast

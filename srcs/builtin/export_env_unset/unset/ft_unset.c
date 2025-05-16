@@ -1,14 +1,14 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   ft_unset.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ast <ast@student.42.fr>                    +#+  +:+       +#+        */
+/*   By: cw3l <cw3l@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 10:52:29 by cbouhadr          #+#    #+#             */
-/*   Updated: 2025/05/03 21:50:33 by ast              ###   ########.fr       */
+/*   Updated: 2025/05/10 09:50:17 by cw3l             ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #include "../../builtin.h"
 
@@ -54,12 +54,10 @@ int	ft_delete_from_env(char *env, char **var)
 		return (-1);
 	while (var[i] != NULL)
 	{
-		if(env && var[i])
+		if (env && var[i])
 		{
 			if (ft_strncmp(env, var[i], ft_strlen(var[i])) == 0)
-			{
 				return (i);
-			}
 		}
 		i++;
 	}
@@ -94,21 +92,20 @@ char	**ft_delete_variable(char **old_env, char **del_var, int valide_var)
 	return (new_env);
 }
 
-int	    ft_unset(char **var, char ***envp)
+int	ft_unset(char **var, char ***envp)
 {
 	char	**new_env;
 	int		valide_variable;
 
-	
 	valide_variable = ft_count_unset_valide_variable(&var[1]);
 	new_env = ft_delete_variable(*envp, &var[1], valide_variable);
 	if (!new_env)
 	{
 		free(var);
-		return(1);
+		return (1);
 	}
 	env_quick_s(new_env, ft_get_split_len(new_env), ft_str_env_cmp);
 	free(*envp);
 	*envp = new_env;
-	return(0);
+	return (0);
 }

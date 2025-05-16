@@ -1,24 +1,16 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   ft_skip_space.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ast <ast@student.42.fr>                    +#+  +:+       +#+        */
+/*   By: cw3l <cw3l@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/12 10:51:46 by cw3l              #+#    #+#             */
-/*   Updated: 2025/05/05 08:37:19 by ast              ###   ########.fr       */
+/*   Updated: 2025/05/10 13:40:53 by cw3l             ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #include "libft.h"
-#include <assert.h>
-
-static int ft_isquote(char c)
-{
-    if(c == 39 || c == 34)
-        return(1);
-    return(0);
-}
 
 char *ft_skip_space_and_quote(char *str)
 {
@@ -36,7 +28,7 @@ char *ft_skip_space_and_quote(char *str)
     len = ft_strlen(&str[i]);
     if(str[i] == '"')
         i++;
-    new_str = malloc(sizeof(char) * (len + 1));
+    new_str = malloc(sizeof(char *) * (len + 1));
     if(!new_str)
         return(NULL);
     while (str[i] && i < len && str[i] != 32)

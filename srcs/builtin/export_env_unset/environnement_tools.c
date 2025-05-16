@@ -1,21 +1,30 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   environnement_tools.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ast <ast@student.42.fr>                    +#+  +:+       +#+        */
+/*   By: cbouhadr <cbouhadr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 13:27:38 by cbouhadr          #+#    #+#             */
-/*   Updated: 2025/04/24 23:28:36 by ast              ###   ########.fr       */
+/*   Updated: 2025/05/16 12:45:50 by cbouhadr         ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #include "../builtin.h"
+
+void	clean_swap(char **new, char **old)
+{
+	char	*tmp;
+
+	tmp = *old;
+	*old = *new;
+	free(tmp);
+}
 
 int	ft_get_var_idx_in_env(char **envp, char *var)
 {
 	char	*env_var;
-	char *tmp;
+	char	*tmp;
 	int		i;
 
 	i = 0;
@@ -35,6 +44,7 @@ int	ft_get_var_idx_in_env(char **envp, char *var)
 	}
 	return (-1);
 }
+
 char	*ft_get_env_variable(char **envp, char *var)
 {
 	int	idx;
@@ -44,5 +54,16 @@ char	*ft_get_env_variable(char **envp, char *var)
 	idx = ft_get_var_idx_in_env(envp, &var[1]);
 	if (idx > -1)
 		return (envp[idx]);
-	return (NULL); // change from "" to NULL;
+	return (NULL);
+}
+
+void	ft_print_env(char **env)
+{
+	char	**dup_env;
+
+	if (!env)
+		return ;
+	dup_env = ft_duplicate_env(env);
+	ft_split_print(dup_env);
+	ft_split_clean(&dup_env);
 }

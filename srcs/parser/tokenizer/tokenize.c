@@ -756,6 +756,21 @@ t_token *ft_tokenize(char *str) {
             new_node = ft_new_token_node(content_str, WORD); // 따옴표 안의 내용은 WORD
             free(content_str);
             if (!new_node) { /* 메모리 할당 오류 처리 */ free_token_list_on_error(token_list); return NULL; }
+            
+            // Cédric qdd for get quote.
+            if(quote_char == '\'')
+            {
+                new_node->single_quote = 1;
+                new_node->double_quote = 0;
+
+            }
+            else if (quote_char == '\"')
+            {
+                new_node->double_quote = 1;
+                new_node->single_quote = 0;
+
+            }
+            
             ft_add_back_node(&token_list, new_node);
             i = j + 1; // 닫는 따옴표 다음으로 i 이동
 
@@ -804,9 +819,10 @@ t_token *ft_create_ast(t_token *token_list_head) {
     t_token *ast_root = NULL; // 전체 AST의 최종 루트
     t_token *current_command_segment = NULL; // 현재 구축 중인 간단한 명령어 또는 리다이렉션 묶음
     t_token *last_processed_command_for_args = NULL; // 인자가 붙어야 할 실제 명령어 노드
-
     t_token *flat_iterator = token_list_head;
 
+    int single_quote = token_list_head->single_quote;
+    int double_quote = token_list_head->double_quote;
     while (flat_iterator) {
         t_token *current_node = flat_iterator;
         flat_iterator = flat_iterator->right;
@@ -827,6 +843,8 @@ t_token *ft_create_ast(t_token *token_list_head) {
                 t_token *attach_point = find_last_node_in_simple_cmd(last_processed_command_for_args);
                 attach_point->right = current_node;
                 current_node->parent = attach_point;
+                attach_point->double_quote = single_quote;
+                attach_point->single_quote = double_quote;
             } else { // current_command_segment는 있지만 last_processed_command_for_args가 NULL인 경우 (예: 리다이렉션만 있었던 경우)
                 fprintf(stderr, "minishell: syntax error near token `%s` (misplaced argument without command)\n", current_node->string);
                 free_ast_recursive(ast_root); free_single_token_node_content(current_node); return NULL;
@@ -920,6 +938,7 @@ t_token *ft_parse(char *str)
     if (!token_list_head) {
         return NULL;
     }
+
     // ft_parse에서는 _tokens 대신 merge_word_tokens 호출
     merge_word_tokens(&token_list_head); 
     

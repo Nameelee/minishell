@@ -1,36 +1,21 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   export_quick_sort.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ast <ast@student.42.fr>                    +#+  +:+       +#+        */
+/*   By: cbouhadr <cbouhadr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/02 17:07:08 by cw3l              #+#    #+#             */
-/*   Updated: 2025/04/30 15:54:55 by ast              ###   ########.fr       */
+/*   Updated: 2025/05/16 12:28:16 by cbouhadr         ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #include "../../builtin.h"
-
-static char	*ft_extract_var(char *env_var)
-{
-	char	*var;
-	int		equal_idx;
-
-	if (!env_var)
-		return (NULL);
-	equal_idx = ft_index_of_char(env_var, '=');
-	if (equal_idx == -1)
-		return (ft_strdup(env_var));
-	var = ft_substr(env_var, 0, equal_idx);
-	if(!var)
-		return(NULL);
-	return (var);
-}
 
 static int	str_env_cmp_process(char *s1, char *s2, size_t n)
 {
 	size_t	i;
+	int		r;
 	char	*trimed_s1;
 	char	*trimed_s2;
 
@@ -42,17 +27,12 @@ static int	str_env_cmp_process(char *s1, char *s2, size_t n)
 		if ((unsigned char)trimed_s1[i] != (unsigned char)trimed_s2[i])
 		{
 			if ((unsigned char)trimed_s1[i] > (unsigned char)trimed_s2[i])
-			{
-				free(trimed_s1);
-				free(trimed_s2);
-				return (1);
-			}
+				r = 1;
 			if ((unsigned char)trimed_s1[i] < (unsigned char)trimed_s2[i])
-			{
-				free(trimed_s1);
-				free(trimed_s2);
-				return (-1);
-			}
+				r = -1;
+			free(trimed_s1);
+			free(trimed_s2);
+			return (r);
 		}
 		i++;
 	}
@@ -61,10 +41,9 @@ static int	str_env_cmp_process(char *s1, char *s2, size_t n)
 	return (0);
 }
 
-
 int	ft_str_env_cmp(char *s1, char *s2, size_t n)
 {
-	int		process_r;
+	int	process_r;
 
 	if (n == 0)
 		return (0);

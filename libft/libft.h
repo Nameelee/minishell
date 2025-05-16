@@ -1,14 +1,14 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   libft.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ast <ast@student.42.fr>                    +#+  +:+       +#+        */
+/*   By: cw3l <cw3l@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/01 10:34:03 by cbouhadr          #+#    #+#             */
-/*   Updated: 2025/05/03 02:22:54 by ast              ###   ########.fr       */
+/*   Updated: 2025/05/10 13:38:42 by cw3l             ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #ifndef LIBFT_H
 # define LIBFT_H
@@ -90,7 +90,7 @@ void	ft_print_bit_16(int n);
 void	ft_print_bit_32(int n);
 void	ft_print_bit_64(int n);
 int		ft_index_of_int(int *arr, int len, int n);
-int		ft_index_of_char(char *arr, char c);
+int		ft_index_of_c(char *arr, char c);
 void 	ft_generate_number(int *arr, int size);
 int		ft_get_max_value(int *arr, int size);
 void    ft_split_quick_sort(char **split, int end, int (*cmp)(const char *,const char *, size_t len));
@@ -99,5 +99,6 @@ void	ft_swap_str(char **str_1, char **str_2);
 int 	ft_is_split_sort(char **split);
 int 	ft_strlen_longest(char *str_1, char *str_2);
 char 	*ft_skip_space_and_quote(char *str);
+int		ft_isquote(char c);
 
 #endif
