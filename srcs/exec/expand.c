@@ -1,5 +1,46 @@
 #include "exec.h"
 
+
+static char *get_var_name(const char *str_after_dollar, size_t *len_of_var_in_input) {
+    // str_after_dollar: '$' 바로 다음 문자를 가리킵니다.
+    // len_of_var_in_input: 입력 문자열에서 변수명 부분("VAR" 또는 "{VAR}" 또는 "?")의 길이를 저장합니다.
+    const char *start = str_after_dollar;
+    const char *end = start;
+    char *var_name = NULL;
+
+    *len_of_var_in_input = 0;
+
+    if (!*start) return NULL; // '$' 뒤에 아무것도 없는 경우
+
+    if (*start == '{') { // ${VAR} 형태 처리
+        end = start + 1;
+        while (*end && *end != '}') {
+            end++;
+        }
+        if (*end == '}') { // 닫는 '}'를 찾은 경우
+            var_name = ft_substr(start + 1, 0, end - (start + 1));
+            *len_of_var_in_input = (end - start) + 1; // "{VAR}"의 길이
+        } else {
+            return NULL; // 닫는 괄호가 없는 경우
+        }
+    } else if (*start == '?') { // $? 처리
+        var_name = ft_strdup("?");
+        *len_of_var_in_input = 1; // "?"의 길이
+    } else if (ft_isalpha(*start) || *start == '_') { // 일반적인 변수명 (알파벳 또는 '_'로 시작)
+        end = start;
+        while (ft_isalnum(*end) || *end == '_') { // 알파벳, 숫자, '_'가 연속되는 부분까지
+            end++;
+        }
+        var_name = ft_substr(start, 0, end - start);
+        *len_of_var_in_input = end - start; // "VAR"의 길이
+    } else {
+        // 유효한 변수명 시작 문자가 아닌 경우 (예: "$$", "$ ")
+        // 현재 미니쉘 요구사항에서는 이런 경우 '$'를 글자 그대로 취급할 수 있습니다.
+        return NULL;
+    }
+    return var_name;
+}
+
 // "your_libft.h" 또는 필요한 곳에 ft_itoa, ft_strdup가 있다고 가정합니다.
 // extern int g_exit_status; // 전역 변수 선언 (예: minishell.h 또는 utils.h)
 
@@ -69,4 +110,86 @@ char *expand_exit_status(const char *original_str) {
 
     free(status_val_str); // ft_itoa로 할당된 메모리 해제
     return expanded_str;
+}
+
+char *expand_all_variables(const char *input_str, char **envp, bool is_single_quoted, bool is_double_quoted) {
+    if (is_single_quoted) { // 작은따옴표로 묶인 경우, 그대로 반환
+        return ft_strdup(input_str);
+    }
+
+    char *result_buffer = ft_strdup(""); // 최종 결과 문자열을 저장할 버퍼
+    const char *current_pos = input_str; // 입력 문자열을 순회하는 포인터
+    size_t var_identifier_len; // 입력에서 "$VAR" 또는 "${VAR}" 등이 차지하는 길이
+
+    while (*current_pos) {
+        // '$' 문자를 만났고, 큰따옴표 내에서 '\$'로 이스케이프된 경우가 아니라면 변수 확장을 시도
+        if (*current_pos == '$' && !(is_double_quoted && current_pos > input_str && *(current_pos - 1) == '\\')) {
+            char *var_name = get_var_name(current_pos + 1, &var_identifier_len); // '$' 다음 문자부터 변수명 분석
+
+            if (var_name) { // 유효한 변수명을 추출한 경우
+                char *value_str = NULL;
+                if (ft_strncmp(var_name, "?", 2) == 0) { // "$?"인 경우
+                    value_str = ft_itoa(g_exit_status);
+                } else { // 일반 환경 변수인 경우
+                    // `ft_get_env_variable` 함수는 변수명 앞에 '$'가 붙은 형태("'$VARNAME'")를 인자로 받습니다.
+                    char *dollar_var_name = ft_strjoin("$", var_name);
+                    if (!dollar_var_name) { /* 메모리 할당 오류 처리 */ free(var_name); free(result_buffer); return ft_strdup(""); }
+                    
+                    char *env_entry = ft_get_env_variable(envp, dollar_var_name); // 예: "VAR=value" 형태로 반환
+                    free(dollar_var_name);
+
+                    if (env_entry) {
+                        char *eq_ptr = ft_strchr(env_entry, '=');
+                        if (eq_ptr) {
+                            value_str = ft_strdup(eq_ptr + 1); // '=' 다음의 값만 복사
+                        } else { // '='가 없는 경우 (일반적이지 않음)
+                            value_str = ft_strdup("");
+                        }
+                    } else { // 환경 변수가 없는 경우, 빈 문자열로 확장
+                        value_str = ft_strdup("");
+                    }
+                }
+                free(var_name);
+
+                if (value_str) { // 추출한 값(value_str)을 결과 버퍼에 추가
+                    char *temp = ft_strjoin(result_buffer, value_str);
+                    free(result_buffer);
+                    free(value_str);
+                    result_buffer = temp;
+                    if (!result_buffer) return ft_strdup(""); // 메모리 할당 오류
+                }
+                // current_pos를 확장된 변수 부분 다음으로 이동
+                current_pos++; // '$' 건너뛰기
+                current_pos += var_identifier_len; // 변수명("VAR", "{VAR}", "?") 부분 건너뛰기
+            } else { // '$' 뒤에 유효한 변수명이 없는 경우 (예: "$ " 또는 문자열 끝의 '$'), '$'를 글자 그대로 처리
+                char append_char[2] = {'$', '\0'};
+                char *temp = ft_strjoin(result_buffer, append_char);
+                free(result_buffer);
+                result_buffer = temp;
+                if (!result_buffer) return ft_strdup("");
+                current_pos++; // '$' 문자 건너뛰기
+            }
+        }
+        // 큰따옴표 내의 이스케이프 문자 처리 ('\$', '\"', '\\')
+        else if (is_double_quoted && *current_pos == '\\' &&
+                   (*(current_pos + 1) == '$' || *(current_pos + 1) == '"' || *(current_pos + 1) == '\\')) {
+            current_pos++; // '\' 건너뛰고, 다음 문자를 결과 버퍼에 추가
+            char append_char[2] = {*current_pos, '\0'};
+            char *temp = ft_strjoin(result_buffer, append_char);
+            free(result_buffer);
+            result_buffer = temp;
+            if (!result_buffer) return ft_strdup("");
+            if (*current_pos) current_pos++; else break; // 이스케이프된 문자 건너뛰기 (NULL 아닌 경우)
+        }
+        // 일반 문자 처리
+        else {
+            char append_char[2] = {*current_pos, '\0'};
+            char *temp = ft_strjoin(result_buffer, append_char);
+            free(result_buffer);
+            result_buffer = temp;
+            if (!result_buffer) return ft_strdup("");
+            current_pos++;
+        }
+    }
+    return result_buffer;
 }

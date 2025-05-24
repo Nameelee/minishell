@@ -74,31 +74,41 @@ void	process_single_echo(char **split_args, int n)
 		write(STDOUT_FILENO, "\n", 1);
 }
 
-int	ft_echo(char **split_args, int squote, int dquote, char **envp)
+int ft_echo(char **split_args) // No squote, dquote, envp parameters
 {
-	int		i;
-	int		arg;
+    int i = 1; // Index for arguments, split_args[0] is "echo"
+    bool n_option = false;
 
-	(void)dquote;
-	(void)squote;
-	i = 1;
-	arg = 0;
-	if (!split_args || !*split_args)
-		return (1);
-	if (!split_args[i])
-		write(1, "\n", 1);
-	else
-	{
-		if (!ft_strncmp(split_args[i], "-n",
-				ft_strlen_longest(split_args[i], "-n")))
-		{
-			arg = 1;
-			i++;
-		}
-		if (squote == 0)
-			process_echo(&split_args[i], envp, arg);
-		else
-			process_single_echo(&split_args[i], arg);
-	}
-	return (0);
+    // Check for -n option(s)
+    // Bash allows multiple -n options like "echo -n -n -n hello"
+    // And "-nnnn" is also valid.
+    while (split_args[i] && ft_strncmp(split_args[i], "-n", 2) == 0) {
+        bool only_n_chars = true;
+        for (size_t j = 1; j < ft_strlen(split_args[i]); ++j) {
+            if (split_args[i][j] != 'n') {
+                only_n_chars = false;
+                break;
+            }
+        }
+        if (only_n_chars && ft_strlen(split_args[i]) >=2) { // Must be at least "-n"
+            n_option = true;
+            i++;
+        } else {
+            break; // Not a valid -n sequence, stop processing -n options
+        }
+    }
+
+    int arg_idx = i;
+    while (split_args[arg_idx]) {
+        ft_putstr_fd(split_args[arg_idx], STDOUT_FILENO);
+        if (split_args[arg_idx + 1]) {
+            ft_putstr_fd(" ", STDOUT_FILENO);
+        }
+        arg_idx++;
+    }
+
+    if (!n_option) {
+        ft_putstr_fd("\n", STDOUT_FILENO);
+    }
+    return (0);
 }
