@@ -92,7 +92,7 @@ char *expand_exit_status(const char *original_str) {
     }
     write_ptr = expanded_str;
 
-    // 문자열 치환
+    // 문자열 치환cd .
     current_pos = original_str; // 다시 처음부터
     while ((found_pos = strstr(current_pos, pattern)) != NULL) {
         // $? 앞부분 복사

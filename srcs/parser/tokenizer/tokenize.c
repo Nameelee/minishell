@@ -430,9 +430,10 @@ t_token *ft_create_ast(t_token *token_list_head) {
             operator_node->right = filename_node;
             filename_node->parent = operator_node;
             
-            // 현재까지 구성된 명령어+인수 체인(current_cmd_and_args_head)을 리다이렉션의 왼쪽 자식으로.
-            operator_node->left = current_cmd_and_args_head; 
-            if (current_cmd_and_args_head) current_cmd_and_args_head->parent = operator_node;
+            operator_node->left = current_segment_root;
+            if (current_segment_root) {
+                current_segment_root->parent = operator_node;
+            }
             
             current_segment_root = operator_node; // 리다이렉션 노드가 현재 세그먼트의 루트가 됨.
             
