@@ -66,7 +66,7 @@ int ft_read_line(char *prompt, char **envp)
         }
         
         //ft_binary_tree_traversal(ast_root);
-		//don't delete this print_ast_start(ast_root);
+		// print_ast_start(ast_root);
         //ft_binary_tree_traversal(ast_root);
 
 		execute_ast(ast_root, &envp, true); // Execute AST!

@@ -171,7 +171,7 @@ static int execute_pipe(t_token *node, char ***envp) {
         close(pipefd[1]); 
         if (dup2(pipefd[0], STDIN_FILENO) == -1) { perror("minishell: dup2 R_STDIN"); close(pipefd[0]); exit(1); }
         close(pipefd[0]); 
-        execute_ast(node->right, envp, false); exit(1); 
+        execute_ast(node->right, envp, false); exit(1);  
     }
     close(pipefd[0]); close(pipefd[1]);
     waitpid(left_pid, &left_status, 0); waitpid(right_pid, &right_status, 0);
@@ -186,7 +186,13 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
         if (is_top_level) g_exit_status = 0;
         return;
     }
-
+	// printf("Current: '%s'\n", node->string);
+	// if (node->parent)
+	// 	printf("Parent: '%s'\n", node->parent->string);
+	// if (node->left)
+	// 	printf("Left: '%s'\n", node->left->string);
+	// if (node->right)
+	// 	printf("Right: '%s'\n", node->right->string);
     if (is_top_level) {
         // ****** Heredoc 관련 함수 호출부 유지 (이제 선언과 빈 정의가 있음) ******
         if (preprocess_heredocs(node) == -1) { 

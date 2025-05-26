@@ -62,11 +62,11 @@ void	ft_print_env(char **env) // (이 함수가 있는 파일에서 수정)
 	char	**dup_env;
 	int		count = 0;
 
-	fprintf(stderr, "[DEBUG FT_ENV %d] ft_print_env started. Will print to STDOUT_FILENO (%d).\n", getpid(), STDOUT_FILENO);
+	//fprintf(stderr, "[DEBUG FT_ENV %d] ft_print_env started. Will print to STDOUT_FILENO (%d).\n", getpid(), STDOUT_FILENO);
 
 	if (!env)
 	{
-		fprintf(stderr, "[DEBUG FT_ENV %d] Environment is NULL.\n", getpid());
+	//	fprintf(stderr, "[DEBUG FT_ENV %d] Environment is NULL.\n", getpid());
 		return ;
 	}
 	dup_env = ft_duplicate_env(env); // 이 부분은 디버깅에 필수적이진 않지만, 기존 로직 유지
@@ -82,5 +82,5 @@ void	ft_print_env(char **env) // (이 함수가 있는 파일에서 수정)
         }
     }
 	ft_split_clean(&dup_env);
-	fprintf(stderr, "[DEBUG FT_ENV %d] ft_print_env finished. Printed %d lines.\n", getpid(), count);
+	//fprintf(stderr, "[DEBUG FT_ENV %d] ft_print_env finished. Printed %d lines.\n", getpid(), count);
 }

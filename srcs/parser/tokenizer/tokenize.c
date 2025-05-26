@@ -12,9 +12,9 @@
 static bool is_whitespace(char c);
 static bool is_operator_char(char c); 
 static void free_token_list(t_token *list); 
-static void free_ast_recursive(t_token *node);
+//static void free_ast_recursive(t_token *node);
 static void free_single_token_node_content_and_node(t_token *node); 
-static t_token *find_last_node_in_simple_cmd(t_token *command_node); // 이제 사용됩니다.
+//static t_token *find_last_node_in_simple_cmd(t_token *command_node); // 이제 사용됩니다.
 static int apply_redir_open(t_redir *redir_item);
 static int apply_redir_write(t_redir *redir_item);
 static int apply_redir_append(t_redir *redir_item);
@@ -32,16 +32,16 @@ static char *append_to_buffer(char *buffer, const char *piece) {
 }
 */
 
-static void free_ast_recursive(t_token *node) { 
-    if (!node) return;
-    if (node->left) free_ast_recursive(node->left);
-    node->left = NULL;
-    if (node->right) free_ast_recursive(node->right);
-    node->right = NULL;
-    if (node->string) free(node->string);
-    node->string = NULL;
-    free(node);
-}
+// static void free_ast_recursive(t_token *node) { 
+//     if (!node) return;
+//     if (node->left) free_ast_recursive(node->left);
+//     node->left = NULL;
+//     if (node->right) free_ast_recursive(node->right);
+//     node->right = NULL;
+//     if (node->string) free(node->string);
+//     node->string = NULL;
+//     free(node);
+// }
 
 static void free_single_token_node_content_and_node(t_token *node) { 
     if (!node) return;
@@ -60,19 +60,19 @@ static void free_token_list(t_token *list_head) {
 }
 
 // find_last_node_in_simple_cmd: 이 함수는 ft_create_ast에서 사용됩니다.
-static t_token *find_last_node_in_simple_cmd(t_token *command_node) { 
-    if (!command_node) return NULL;
-    t_token *current = command_node;
-    // CMD, BUILTIN, WORD 토큰의 ->right 체인을 따라가며 마지막 인수를 찾습니다.
-    // VAR 토큰도 인수로 간주될 수 있다면 조건에 추가합니다.
-    while (current->right && 
-           (current->right->token == WORD || 
-            current->right->token == ARG ||  // ARG 토큰 타입이 있다면
-            current->right->token == VAR)) { // VAR 토큰 타입이 인수로 올 수 있다면
-        current = current->right;
-    }
-    return current;
-}
+// static t_token *find_last_node_in_simple_cmd(t_token *command_node) { 
+//     if (!command_node) return NULL;
+//     t_token *current = command_node;
+//     // CMD, BUILTIN, WORD 토큰의 ->right 체인을 따라가며 마지막 인수를 찾습니다.
+//     // VAR 토큰도 인수로 간주될 수 있다면 조건에 추가합니다.
+//     while (current->right && 
+//            (current->right->token == WORD || 
+//             current->right->token == ARG ||  // ARG 토큰 타입이 있다면
+//             current->right->token == VAR)) { // VAR 토큰 타입이 인수로 올 수 있다면
+//         current = current->right;
+//     }
+//     return current;
+// }
 
 // --- Redirection Helper Functions ---
 static int apply_redir_open(t_redir *redir_item) {
@@ -358,150 +358,263 @@ t_token *ft_tokenize(char *str) {
 }
 
 // --- AST Creation Function (수정된 버전) ---
-t_token *ft_create_ast(t_token *token_list_head) {
-    t_token *ast_root = NULL;
-    t_token *current_cmd_and_args_head = NULL; 
-    t_token *current_cmd_token = NULL;      // 실제 CMD/BUILTIN 토큰 (인수가 붙을 대상)
-    // t_token *current_cmd_last_arg = NULL; // find_last_node_in_simple_cmd로 대체 가능
+// t_token *ft_create_ast(t_token *token_list_head) {
+//     t_token *ast_root = NULL;
+//     t_token *current_cmd_and_args_head = NULL; 
+//     t_token *current_cmd_token = NULL;      // 실제 CMD/BUILTIN 토큰 (인수가 붙을 대상)
+//     // t_token *current_cmd_last_arg = NULL; // find_last_node_in_simple_cmd로 대체 가능
 
-    t_token *current_segment_root = NULL;   // 현재 파이프 세그먼트의 루트 (명령어 또는 리다이렉션)
+//     t_token *current_segment_root = NULL;   // 현재 파이프 세그먼트의 루트 (명령어 또는 리다이렉션)
 
-    t_token *flat_iterator = token_list_head;
-    t_token *next_flat_token = NULL;
+//     t_token *flat_iterator = token_list_head;
+//     t_token *next_flat_token = NULL;
 
-    while (flat_iterator) {
-        t_token *current_node = flat_iterator;
-        next_flat_token = flat_iterator->right;
+//     while (flat_iterator) {
+// 		t_token *current_node = flat_iterator;
+//         next_flat_token = flat_iterator->right;
+// 	//	printf("%s\n", flat_iterator->string);
 
-        current_node->left = NULL;
-        current_node->right = NULL;
-        current_node->parent = NULL; 
+//         current_node->left = NULL;
+//         current_node->right = NULL;
+//         current_node->parent = NULL; 
 
-        int token_type = current_node->token;
+//         int token_type = current_node->token;
 
-        if (token_type == CMD || token_type == BUILTIN || token_type == WORD || token_type == VAR) {
-            if (!current_cmd_token) { // 새 명령어 또는 세그먼트의 첫 단어
-                current_cmd_token = current_node; // 이 노드가 현재 명령어
-                // current_cmd_last_arg = current_node; // 이제 find_last_node_in_simple_cmd 사용
-                current_cmd_and_args_head = current_node; 
-                if (!current_segment_root) { 
-                    current_segment_root = current_cmd_and_args_head;
-                }
-            } else { // 현재 명령어(current_cmd_token)에 대한 인수
-                // ****** find_last_node_in_simple_cmd 호출 사용 ******
-                t_token *attach_point = find_last_node_in_simple_cmd(current_cmd_token);
-                if (attach_point) { 
-                    attach_point->right = current_node; 
-                    current_node->parent = attach_point;
-                    // current_cmd_last_arg = current_node; // current_cmd_last_arg는 더 이상 직접 추적 안 함
-                } else { 
-                     // current_cmd_token이 NULL이거나, 알 수 없는 이유로 attach_point를 찾지 못한 경우
-                     fprintf(stderr, "minishell: AST construction error - cannot find attach point for argument '%s'.\n", current_node->string ? current_node->string : "NULL_STR");
-                    free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
-                    free_single_token_node_content_and_node(current_node); // 오류 유발 노드
-                    if (current_cmd_token != current_node) free_single_token_node_content_and_node(current_cmd_token); // 만약 다르다면
-                    free_token_list(next_flat_token); // 나머지 토큰 리스트
-                    return NULL;
-                }
-                // ****** 수정 끝 ******
-            }
-        }
-        else if (token_type == REDIR_OPEN || token_type == REDIR_WRITE ||
-                 token_type == REDIR_WRITE_A || token_type == HEREDOC) {
-            t_token *operator_node = current_node;
+// 		if (ast_root)
+// 				printf("Ast: '%s'\n", ast_root->string);
+// 		// if (ast_root->left)
+// 		// 		printf("Ast left: '%d'\n", ast_root->left->token);
 
-            if (!next_flat_token) { 
-                fprintf(stderr, "minishell: syntax error near EOL after redirection '%s'\n", operator_node->string ? operator_node->string : "OP");
-                free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
-                free_single_token_node_content_and_node(operator_node);
-                return NULL;
-            }
-            t_token *filename_node = next_flat_token;
-            next_flat_token = filename_node->right;
-            filename_node->left = NULL; filename_node->right = NULL; 
+//         if (token_type == CMD || token_type == BUILTIN || token_type == WORD || token_type == VAR) {
+//             if (!current_cmd_token) { // 새 명령어 또는 세그먼트의 첫 단어
+//                 current_cmd_token = current_node; // 이 노드가 현재 명령어
+//                 // current_cmd_last_arg = current_node; // 이제 find_last_node_in_simple_cmd 사용
+//                 current_cmd_and_args_head = current_node; 
+//                 if (!current_segment_root) { 
+//                     current_segment_root = current_cmd_and_args_head;
+//                 }
+//             } else { // 현재 명령어(current_cmd_token)에 대한 인수
+//                 // ****** find_last_node_in_simple_cmd 호출 사용 ******
+//                 t_token *attach_point = find_last_node_in_simple_cmd(current_cmd_token);
+//                 if (attach_point) { 
+//                     attach_point->right = current_node; 
+//                     current_node->parent = attach_point;
+//                     // current_cmd_last_arg = current_node; // current_cmd_last_arg는 더 이상 직접 추적 안 함
+//                 } else { 
+//                      // current_cmd_token이 NULL이거나, 알 수 없는 이유로 attach_point를 찾지 못한 경우
+//                      fprintf(stderr, "minishell: AST construction error - cannot find attach point for argument '%s'.\n", current_node->string ? current_node->string : "NULL_STR");
+//                     free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
+//                     free_single_token_node_content_and_node(current_node); // 오류 유발 노드
+//                     if (current_cmd_token != current_node) free_single_token_node_content_and_node(current_cmd_token); // 만약 다르다면
+//                     free_token_list(next_flat_token); // 나머지 토큰 리스트
+//                     return NULL;
+//                 }
+//                 // ****** 수정 끝 ******
+//             }
+//         }
+//         else if (token_type == REDIR_OPEN || token_type == REDIR_WRITE ||
+//                  token_type == REDIR_WRITE_A || token_type == HEREDOC) {
+//             t_token *operator_node = current_node;
+
+//             if (!next_flat_token) { 
+//                 fprintf(stderr, "minishell: syntax error near EOL after redirection '%s'\n", operator_node->string ? operator_node->string : "OP");
+//                 free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
+//                 free_single_token_node_content_and_node(operator_node);
+//                 return NULL;
+//             }
+//             t_token *filename_node = next_flat_token;
+//             next_flat_token = filename_node->right;
+//             filename_node->left = NULL; filename_node->right = NULL; 
             
-            if (filename_node->token != WORD && filename_node->token != VAR) {
-                 fprintf(stderr, "minishell: syntax error: expected filename after redirection '%s', got '%s'\n", operator_node->string ? operator_node->string : "OP", filename_node->string ? filename_node->string : get_token_type_string(filename_node->token));
-                 free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
-                 free_single_token_node_content_and_node(operator_node); free_single_token_node_content_and_node(filename_node);
-                 free_token_list(next_flat_token);
-                 return NULL;
-            }
-            operator_node->right = filename_node;
-            filename_node->parent = operator_node;
+//             if (filename_node->token != WORD && filename_node->token != VAR) {
+//                  fprintf(stderr, "minishell: syntax error: expected filename after redirection '%s', got '%s'\n", operator_node->string ? operator_node->string : "OP", filename_node->string ? filename_node->string : get_token_type_string(filename_node->token));
+//                  free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
+//                  free_single_token_node_content_and_node(operator_node); free_single_token_node_content_and_node(filename_node);
+//                  free_token_list(next_flat_token);
+//                  return NULL;
+//             }
+//             operator_node->right = filename_node;
+//             filename_node->parent = operator_node;
             
-            operator_node->left = current_segment_root;
-            if (current_segment_root) {
-                current_segment_root->parent = operator_node;
-            }
+//             operator_node->left = current_segment_root;
+//             if (current_segment_root) {
+//                 current_segment_root->parent = operator_node;
+//             }
             
-            current_segment_root = operator_node; // 리다이렉션 노드가 현재 세그먼트의 루트가 됨.
+//             current_segment_root = operator_node; // 리다이렉션 노드가 현재 세그먼트의 루트가 됨.
             
-            // 리다이렉션 뒤에 오는 인수는 원래 명령어(current_cmd_token)에 붙어야 함.
-            // current_cmd_token은 operator_node->left 내부의 명령어 노드를 가리켜야 함.
-            // 만약 current_cmd_and_args_head가 NULL이었다면 (예: `> out cmd`), 
-            // current_cmd_token은 다음 CMD/WORD 토큰에서 설정될 것임.
-            if (!operator_node->left) { // 리다이렉션이 명령어 없이 시작된 경우 (> outfile cmd ...)
-                current_cmd_token = NULL; // 다음 토큰이 명령어가 될 준비
-                current_cmd_and_args_head = NULL; 
-            }
-            // current_cmd_token은 이미 operator_node->left (또는 그 내부의 명령어)를 가리키고 있어야 함.
-            // 이 부분은 current_cmd_token을 명시적으로 업데이트하지 않아도,
-            // 다음 WORD/CMD 토큰이 올 때 current_cmd_token (NULL이 아니라면)에 인수가 붙도록 로직이 되어 있음.
-        }
-        else if (token_type == PIPE) {
-            t_token *pipe_node = current_node;
-            if (!current_segment_root && !ast_root) { 
-                fprintf(stderr, "minishell: syntax error: unexpected pipe\n");
-                free_single_token_node_content_and_node(pipe_node); free_token_list(next_flat_token);
-                return NULL;
-            }
+//             // 리다이렉션 뒤에 오는 인수는 원래 명령어(current_cmd_token)에 붙어야 함.
+//             // current_cmd_token은 operator_node->left 내부의 명령어 노드를 가리켜야 함.
+//             // 만약 current_cmd_and_args_head가 NULL이었다면 (예: `> out cmd`), 
+//             // current_cmd_token은 다음 CMD/WORD 토큰에서 설정될 것임.
+//             if (!operator_node->left) { // 리다이렉션이 명령어 없이 시작된 경우 (> outfile cmd ...)
+//                 current_cmd_token = NULL; // 다음 토큰이 명령어가 될 준비
+//                 current_cmd_and_args_head = NULL; 
+//             }
+//             // current_cmd_token은 이미 operator_node->left (또는 그 내부의 명령어)를 가리키고 있어야 함.
+//             // 이 부분은 current_cmd_token을 명시적으로 업데이트하지 않아도,
+//             // 다음 WORD/CMD 토큰이 올 때 current_cmd_token (NULL이 아니라면)에 인수가 붙도록 로직이 되어 있음.
+//         }
+//         else if (token_type == PIPE) {
+//             t_token *pipe_node = current_node;
+//             if (!current_segment_root && !ast_root) { 
+//                 fprintf(stderr, "minishell: syntax error: unexpected pipe\n");
+//                 free_single_token_node_content_and_node(pipe_node); free_token_list(next_flat_token);
+//                 return NULL;
+//             }
 
-            // 현재 세그먼트 (current_segment_root)가 존재하면 파이프의 왼쪽 자식이 됨.
-            // 그렇지 않고 ast_root만 존재하면 (이전 파이프 체인), ast_root가 왼쪽 자식이 됨.
-            pipe_node->left = current_segment_root ? current_segment_root : ast_root;
-            if (pipe_node->left) pipe_node->left->parent = pipe_node;
+//             // 현재 세그먼트 (current_segment_root)가 존재하면 파이프의 왼쪽 자식이 됨.
+//             // 그렇지 않고 ast_root만 존재하면 (이전 파이프 체인), ast_root가 왼쪽 자식이 됨.
+//             pipe_node->left = current_segment_root ? current_segment_root : ast_root;
+//             if (pipe_node->left) pipe_node->left->parent = pipe_node;
             
-            ast_root = pipe_node; // 이 파이프가 새로운 루트가 됨 (오른쪽은 다음 토큰들로 채워짐)
+// 			if (pipe_node)
+// 				printf("New Pipe: '%s'\n", pipe_node->string);
+// 			if (pipe_node->left)
+// 				printf("New Pipe left: '%s'\n", pipe_node->left->string);
 
-            current_cmd_and_args_head = NULL; 
-            current_cmd_token = NULL;
-            // current_cmd_last_arg = NULL; // 더 이상 직접 사용 안 함
-            current_segment_root = NULL;
-        } else { 
-            fprintf(stderr, "minishell: syntax error: unknown token type %d (%s)\n", token_type, current_node->string ? current_node->string : "NULL_STR");
-            free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
-            free_single_token_node_content_and_node(current_node);
-            free_token_list(next_flat_token);
-            return NULL;
-        }
-        flat_iterator = next_flat_token;
-    } 
+//             ast_root = pipe_node; // 이 파이프가 새로운 루트가 됨 (오른쪽은 다음 토큰들로 채워짐)
 
-    if (ast_root && ast_root->token == PIPE && ast_root->right == NULL) {
-        if (current_segment_root) { 
-            ast_root->right = current_segment_root;
-            if(current_segment_root) current_segment_root->parent = ast_root;
-        } else { 
-            fprintf(stderr, "minishell: syntax error: command expected after pipe\n");
-            free_ast_recursive(ast_root); return NULL;
-        }
-    } else if (!ast_root && current_segment_root) { 
-        ast_root = current_segment_root;
-    } else if (ast_root && current_segment_root && ast_root != current_segment_root && ast_root->right != current_segment_root) {
-        fprintf(stderr, "minishell: AST Error: dangling segment at end of parsing. AST Root: %s, Dangling: %s\n",
-                ast_root ? get_token_type_string(ast_root->token) : "NULL",
-                current_segment_root ? get_token_type_string(current_segment_root->token) : "NULL");
-        free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
-        return NULL;
-    }
+
+//             current_cmd_and_args_head = NULL; 
+//             current_cmd_token = NULL;
+//             // current_cmd_last_arg = NULL; // 더 이상 직접 사용 안 함
+//             current_segment_root = NULL;
+//         } else { 
+//             fprintf(stderr, "minishell: syntax error: unknown token type %d (%s)\n", token_type, current_node->string ? current_node->string : "NULL_STR");
+//             free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
+//             free_single_token_node_content_and_node(current_node);
+//             free_token_list(next_flat_token);
+//             return NULL;
+//         }
+//         flat_iterator = next_flat_token;
+//     } 
+
+//     if (ast_root && ast_root->token == PIPE && ast_root->right == NULL) {
+//         if (current_segment_root) { 
+//             ast_root->right = current_segment_root;
+//             if(current_segment_root) current_segment_root->parent = ast_root;
+//         } else { 
+//             fprintf(stderr, "minishell: syntax error: command expected after pipe\n");
+//             free_ast_recursive(ast_root); return NULL;
+//         }
+//     } else if (!ast_root && current_segment_root) { 
+//         ast_root = current_segment_root;
+//     } else if (ast_root && current_segment_root && ast_root != current_segment_root && ast_root->right != current_segment_root) {
+//         fprintf(stderr, "minishell: AST Error: dangling segment at end of parsing. AST Root: %s, Dangling: %s\n",
+//                 ast_root ? get_token_type_string(ast_root->token) : "NULL",
+//                 current_segment_root ? get_token_type_string(current_segment_root->token) : "NULL");
+//         free_ast_recursive(ast_root); free_ast_recursive(current_segment_root);
+//         return NULL;
+//     }
     
-    if (!ast_root && !current_segment_root && token_list_head && token_list_head->token != 0 && token_list_head->string != NULL) { 
-        // If token_list_head was valid but ast_root is null, an error should have been caught and returned NULL.
-        // This might indicate an empty command after processing, or an unhandled error state.
-    }
+//     if (!ast_root && !current_segment_root && token_list_head && token_list_head->token != 0 && token_list_head->string != NULL) { 
+//         // If token_list_head was valid but ast_root is null, an error should have been caught and returned NULL.
+//         // This might indicate an empty command after processing, or an unhandled error state.
+//     }
     
-    return ast_root;
+//     return ast_root;
+// }
+
+static t_token *find_last_argument(t_token *command_node) {
+    if (!command_node) return NULL;
+    t_token *current = command_node;
+    // Traverse down the right links as long as they are WORDs (arguments)
+    while (current->right && current->right->token == WORD) {
+        current = current->right;
+    }
+    return current; // Returns command node or the last WORD node in the chain
+}
+
+static t_token *handle_operator_node(t_token *op_node, t_token **root_ptr) {
+    t_token *current_root = *root_ptr;
+
+    // Operator becomes the new root, previous root becomes left child
+    op_node->left = current_root;
+    if (current_root) {
+        current_root->parent = op_node;
+    }
+    *root_ptr = op_node; // Update the root pointer in the caller
+
+    // Pipe's right child is linked later when the next command/operand arrives
+    return *root_ptr; // Return the new root
+}
+
+t_token *ft_create_ast(t_token *token_list)
+{
+    t_token *root = NULL;
+    t_token *new_node = NULL;
+    t_token *last_command_node = NULL; // Track the last CMD/BUILTIN added
+	int loop_count = 0; // for debug 카운터
+
+    while (token_list)
+    {
+		loop_count++; // for debug
+        new_node = token_list;
+        token_list = token_list->right; // Consume node from list
+        new_node->left = NULL;
+        new_node->right = NULL;
+        new_node->parent = NULL;
+
+        int token_type = new_node->token;
+
+        if (!root) // First token in the (sub)tree
+        {
+            // Must be CMD, BUILTIN, REDIR, or HEREDOC
+            if (token_type == CMD || token_type == BUILTIN || token_type == WORD) {
+                last_command_node = new_node; // This is the first command
+                root = new_node;
+            } else if (token_type == HEREDOC || token_type == REDIR_OPEN ||
+                       token_type == REDIR_WRITE || token_type == REDIR_WRITE_A) {
+                root = handle_operator_node(new_node, &root); // Pass NULL as current root
+                if (!root) return NULL; // Error occurred
+                last_command_node = NULL; // Operator resets command context
+            } else {
+				char err_msg[100];
+              	sprintf(err_msg, "Syntax error: Unexpected token '%s' at start of command", new_node->string ? new_node->string : "");
+            }
+        }
+        else // Tree already exists
+        {
+            // Handle Operators (PIPE, REDIR_*, HEREDOC)
+            if (token_type == HEREDOC || token_type == REDIR_OPEN ||
+                token_type == REDIR_WRITE || token_type == REDIR_WRITE_A ||
+                token_type == PIPE)
+            {
+                root = handle_operator_node(new_node, &root);
+                if (!root) return NULL;
+                last_command_node = NULL; // Operator resets command context
+            }
+            // Handle Command/Builtin (must follow PIPE)
+			else if (root && root->token == PIPE && root->right == NULL &&
+				(token_type == CMD || token_type == BUILTIN || token_type == WORD))
+			{
+					// This token is the command following a pipe
+					root->right = new_node; // Attach as right child of PIPE
+					new_node->parent = root;
+					last_command_node = new_node; // This is the new command context
+					// IMPORTANT: Successfully handled, do not fall through to argument check!
+			}
+			// ELSE IF: Handle Arguments (only if not handled above)
+			else if (token_type == WORD)
+			{
+					// Attach argument to the last command/argument chain
+					t_token *attach_point = find_last_argument(last_command_node);
+					if (attach_point) {
+						attach_point->right = new_node;
+						new_node->parent = attach_point;
+					}
+			}
+			// ELSE: Handle Unknown Token Types
+			else
+			{
+					char err_msg[100];
+					sprintf(err_msg, "Unknown token type %d encountered", token_type);
+			}
+        }
+		fflush(stderr); // 디버그 출력이 즉시 보이도록 함
+    } // end while
+    return root; // Return the final root of the constructed AST
 }
 
 // --- ft_parse (Main parsing function) ---
