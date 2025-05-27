@@ -21,6 +21,55 @@ void	clean_swap(char **new, char **old)
 	free(tmp);
 }
 
+int	ft_get_var_idx_in_env(char **envp, char *var) // 'var' is the variable name to find, e.g., "PWD"
+{
+	char	*env_var_name;      // Stores the name part of the current environment variable
+	char	*tmp_env_entry_dup; // Stores the duplicated current environment string
+	int		i;
+	size_t	var_len;
+	size_t	env_var_name_len;
+
+	i = 0;
+	if (!envp || !var) // Basic null check for robustness
+		return (-1);
+
+	var_len = ft_strlen(var); // Length of the name we are looking for (e.g., strlen("PWD"))
+
+	while (envp[i])
+	{
+		// Duplicate the current environment entry to safely parse it
+		tmp_env_entry_dup = ft_strdup(envp[i]); // e.g., strdup("PWD=/home/user")
+		if (!tmp_env_entry_dup)
+		{
+			// Malloc failure; ideally, log an error or handle more gracefully.
+			// Skipping this entry for now to prevent a crash.
+			i++;
+			continue;
+		}
+
+		// ft_parse_env_variable is expected to return a new string with just the NAME
+		env_var_name = ft_parse_env_variable(tmp_env_entry_dup); // Extracts "NAME"
+		
+		if (env_var_name) // Check if parsing was successful
+		{
+			env_var_name_len = ft_strlen(env_var_name);
+			// Compare lengths first, then content if lengths are equal for an exact match
+			if (env_var_name_len == var_len && ft_strncmp(env_var_name, var, var_len) == 0)
+			{
+				free(tmp_env_entry_dup);
+				free(env_var_name);
+				return (i); // Variable found, return its index
+			}
+			free(env_var_name); // Free the parsed name if it's not a match
+		}
+		free(tmp_env_entry_dup); // Free the duplicated entry
+		i++;
+	}
+	return (-1); // Variable not found
+}
+
+
+/*
 int	ft_get_var_idx_in_env(char **envp, char *var)
 {
 	char	*env_var;
@@ -44,6 +93,7 @@ int	ft_get_var_idx_in_env(char **envp, char *var)
 	}
 	return (-1);
 }
+*/
 
 char	*ft_get_env_variable(char **envp, char *var)
 {

@@ -55,5 +55,6 @@ int	main(int argc, char **argv, char **envp)
 	}
 	ft_start_minishell("minishell: ", dupplicate_env);
 	free_duplicated_env(dupplicate_env);
+	printf("exit status is %d", g_exit_status);
 	return (g_exit_status);
 }

@@ -113,9 +113,41 @@ char *expand_exit_status(const char *original_str) {
 }
 
 char *expand_all_variables(const char *input_str, char **envp, bool is_single_quoted, bool is_double_quoted) {
-    if (is_single_quoted) { // 작은따옴표로 묶인 경우, 그대로 반환
-        return ft_strdup(input_str);
+
+	// --- DEBUG START ---
+    // fprintf(stderr, "\nDEBUG [expand_all_variables CALLED]\n");
+    // fprintf(stderr, "  input_str: [%s]\n", input_str ? input_str : "NULL");
+    // fprintf(stderr, "  is_single_quoted: %d\n", is_single_quoted);
+    // fprintf(stderr, "  is_double_quoted: %d\n", is_double_quoted);
+
+    // Specifically check if we are processing "$PWD"
+    // if (input_str && (ft_strlen(input_str) == 4 && ft_strncmp(input_str, "$PWD", 4) == 0)) {
+    //     fprintf(stderr, "  >> Input is specifically '$PWD'. Checking env for PWD variable:\n");
+    //     if (envp) {
+    //         int found_pwd_in_envp = 0;
+    //         for (int k = 0; envp[k] != NULL; ++k) {
+    //             if (ft_strncmp(envp[k], "PWD=", 4) == 0) {
+    //                 fprintf(stderr, "      Found in envp: %s\n", envp[k]);
+    //                 found_pwd_in_envp = 1;
+    //                 break;
+    //             }
+    //         }
+    //         if (!found_pwd_in_envp) {
+    //             fprintf(stderr, "      PWD= not found in envp.\n");
+    //         }
+    //     } else {
+    //         fprintf(stderr, "      envp is NULL for PWD check.\n");
+    //     }
+    // }
+    // --- DEBUG END ---
+
+    if (is_single_quoted) {
+        //fprintf(stderr, "DEBUG [expand_all_variables]: Single quote path. Returning copy of [%s]\n", input_str ? input_str : "NULL");
+        char *result = ft_strdup(input_str ? input_str : ""); // Handle NULL input_str for ft_strdup
+        //fprintf(stderr, "DEBUG [expand_all_variables]: Result from ft_strdup for single quote: [%s]\n", result ? result : "NULL");
+        return result;
     }
+
 
     char *result_buffer = ft_strdup(""); // 최종 결과 문자열을 저장할 버퍼
     const char *current_pos = input_str; // 입력 문자열을 순회하는 포인터

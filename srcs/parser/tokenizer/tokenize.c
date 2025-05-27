@@ -515,7 +515,7 @@ t_token *ft_tokenize(char *str) {
     
 //     return ast_root;
 // }
-
+/*
 static t_token *find_last_argument(t_token *command_node) {
     if (!command_node) return NULL;
     t_token *current = command_node;
@@ -525,6 +525,19 @@ static t_token *find_last_argument(t_token *command_node) {
     }
     return current; // Returns command node or the last WORD node in the chain
 }
+*/
+
+static t_token *find_last_argument(t_token *command_node) {
+    if (!command_node) return NULL;
+    t_token *current = command_node;
+    // Traverse down the right links as long as they are WORDs OR VARs (arguments)
+    while (current->right &&
+           (current->right->token == WORD || current->right->token == VAR)) { // Added VAR
+        current = current->right;
+    }
+    return current;
+}
+
 
 static t_token *handle_operator_node(t_token *op_node, t_token **root_ptr) {
     t_token *current_root = *root_ptr;
@@ -545,11 +558,11 @@ t_token *ft_create_ast(t_token *token_list)
     t_token *root = NULL;
     t_token *new_node = NULL;
     t_token *last_command_node = NULL; // Track the last CMD/BUILTIN added
-	int loop_count = 0; // for debug 카운터
+	//int loop_count = 0; // for debug 카운터
 
     while (token_list)
     {
-		loop_count++; // for debug
+		//loop_count++; // for debug
         new_node = token_list;
         token_list = token_list->right; // Consume node from list
         new_node->left = NULL;
@@ -569,10 +582,11 @@ t_token *ft_create_ast(t_token *token_list)
                 root = handle_operator_node(new_node, &root); // Pass NULL as current root
                 if (!root) return NULL; // Error occurred
                 last_command_node = NULL; // Operator resets command context
-            } else {
-				char err_msg[100];
-              	sprintf(err_msg, "Syntax error: Unexpected token '%s' at start of command", new_node->string ? new_node->string : "");
-            }
+            } else 
+			{
+              	fprintf(stderr, "Minishell AST Error: Unexpected token '%s' (type %d) at start of command.\n", new_node->string ? new_node->string : "N/A", token_type);
+				return NULL;
+			}
         }
         else // Tree already exists
         {
@@ -596,20 +610,37 @@ t_token *ft_create_ast(t_token *token_list)
 					// IMPORTANT: Successfully handled, do not fall through to argument check!
 			}
 			// ELSE IF: Handle Arguments (only if not handled above)
-			else if (token_type == WORD)
+			//else if (token_type == WORD)
+			else if (token_type == WORD || token_type == VAR)
 			{
-					// Attach argument to the last command/argument chain
-					t_token *attach_point = find_last_argument(last_command_node);
-					if (attach_point) {
-						attach_point->right = new_node;
-						new_node->parent = attach_point;
-					}
+				if (!last_command_node) {
+                     fprintf(stderr, "Minishell AST Error: Argument '%s' (type %d) found but no command to attach it to (last_command_node is NULL).\n", new_node->string ? new_node->string : "N/A", token_type);
+                     // Cleanup and error
+                     // free_token_list(new_node); // Part of token_list, careful freeing
+                     // free_ast_recursive(root); // Assuming you have a way to free the partially built AST
+                     return NULL;
+                }
+				t_token *attach_point = find_last_argument(last_command_node);
+				if (attach_point) {
+					attach_point->right = new_node;
+					new_node->parent = attach_point;
+				}
+				else 
+				{
+                    // This case should ideally not be reached if last_command_node is valid.
+                    // If find_last_argument returns NULL from a non-NULL last_command_node, it's an issue.
+                     fprintf(stderr, "Minishell AST Error: Could not find attach point for argument '%s' to command '%s'.\n", new_node->string ? new_node->string : "N/A", last_command_node->string ? last_command_node->string : "N/A");
+                     // Cleanup and error
+                     return NULL;
+                }
 			}
 			// ELSE: Handle Unknown Token Types
 			else
 			{
-					char err_msg[100];
-					sprintf(err_msg, "Unknown token type %d encountered", token_type);
+                // Handle unknown or misplaced token types
+                fprintf(stderr, "Minishell AST Error: Unexpected token '%s' (type %d) in command structure.\n", new_node->string ? new_node->string : "N/A", token_type);
+                // Cleanup and error
+                return NULL;
 			}
         }
 		fflush(stderr); // 디버그 출력이 즉시 보이도록 함

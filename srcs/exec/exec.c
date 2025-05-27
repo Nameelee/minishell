@@ -104,8 +104,11 @@ static char **build_argv_from_ast(t_token *cmd_node, char ***envp_ptr) { // Adde
 
 
 // ft_execute_builtin 함수 (이전 답변의 안정화된 버전)
-int ft_execute_builtin(t_token *node, char ***envp_ptr) {
-    char **original_argv = NULL; // Initialize to NULL
+int ft_execute_builtin(t_token *node, char ***envp_ptr) 
+{
+	//int squote = 0;
+    //int dquote = 0;
+    char **original_argv = NULL;
     int exit_status = 1;
 
     original_argv = build_argv_from_ast(node, envp_ptr); // Pass envp_ptr
@@ -115,7 +118,11 @@ int ft_execute_builtin(t_token *node, char ***envp_ptr) {
     }
 
     if (ft_strncmp(original_argv[0], "echo", 5) == 0) {
-        exit_status = ft_echo(original_argv); // Simplified call
+                // cedric add get the single quote and double quote in node.right
+        
+        //squote = node->right->single_quote;
+        //dquote = node->right->double_quote;
+        exit_status = ft_echo(original_argv);
     }
     // ... other builtins cd, pwd ...
     else if (ft_strncmp(original_argv[0], "cd", 3) == 0) {

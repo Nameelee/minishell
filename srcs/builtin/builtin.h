@@ -30,7 +30,7 @@ void	ft_exit(char **env);
 int		ft_env(char **processed_argv, char ***envp);
 int		ft_unset(char **var, char ***envp);
 int		ft_export(char ***env, char **processed_argv);
-int ft_echo(char **split_args);
+int		ft_echo(char **split_args);
 
 int		ft_str_env_cmp(char *s1, char *s2, size_t n);
 char	**ft_duplicate_env(char *envp[]);

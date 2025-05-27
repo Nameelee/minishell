@@ -26,7 +26,10 @@ void	print_echo(char *str, char **envp)
 				break ;
 		}
 		else if (str[i] == '$' && str[i + 1] == '?')
+		{
+
 			ft_print_variable_int_str(&str[i++]);
+		}
 		else
 			write(STDOUT_FILENO, &str[i], 1);
 		i++;
@@ -40,6 +43,7 @@ int	process_echo(char **split_args, char **envp, int n)
 	j = 0;
 	while (split_args[j])
 	{
+		printf("I am here%s", split_args[j]);
 		print_echo(split_args[j], envp);
 		if (split_args[j + 1])
 			write(STDOUT_FILENO, " ", 1);
