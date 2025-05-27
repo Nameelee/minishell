@@ -222,6 +222,7 @@ char *expand_all_variables(const char *input_str, char **envp, bool is_single_qu
             if (!result_buffer) return ft_strdup("");
             current_pos++;
         }
+		//fprintf(stderr, "DEBUG: current_pos char: '%c', result_buffer so far: [%s]\n", *current_pos, result_buffer);
     }
     return result_buffer;
 }
