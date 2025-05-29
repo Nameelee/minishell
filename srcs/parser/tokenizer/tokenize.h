@@ -40,6 +40,16 @@
 #define VAR 11
 #define BUILTIN 12
 
+#ifndef IS_REDIR_OPERATOR
+#define IS_REDIR_OPERATOR(type) (type == REDIR_OPEN || type == REDIR_WRITE || type == REDIR_WRITE_A || type == HEREDOC)
+#define IS_FILENAME_TYPE(type) (type == WORD || type == VAR)
+#define IS_PIPE_OPERATOR(type) (type == PIPE)
+#define IS_ANY_OPERATOR(type) (IS_REDIR_OPERATOR(type) || IS_PIPE_OPERATOR(type))
+#define IS_COMMAND_COMPONENT(type) (type == CMD || type == BUILTIN || type == WORD || type == VAR)
+#define IS_ARGUMENT_TYPE(type) (type == WORD || type == VAR)
+#endif
+
+
 typedef enum e_heredoc_state {
     HD_NOT_PROCESSED,     // Initial state
     HD_PROCESSING_FAILED, // An attempt was made but failed
