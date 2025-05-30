@@ -3,12 +3,22 @@ NAME= minishell
 ##########################  OS check
 
 OS = $(shell uname)
+# Define OS-specific flags and compiler
 ifeq ($(OS), Darwin)
-CC=cc
-GFLAGS= -Werror -Wall -Wextra
+    CC=cc
+    GFLAGS= -Werror -Wall -Wextra
+    # For macOS, set readline flags using Homebrew prefix
+    BREW_PREFIX = $(shell brew --prefix)
+    # Compiler flag to find readline headers
+    INC_RL = -I$(BREW_PREFIX)/opt/readline/include
+    # Linker flags to find readline library
+    LIB_RL = -L$(BREW_PREFIX)/opt/readline/lib -lreadline
 else ifeq ($(OS), Linux)
-CC=gcc
-GFLAGS= -Werror -Wall -Wextra
+    CC=gcc
+    GFLAGS= -Werror -Wall -Wextra
+    # For Linux, readline is usually in a standard path
+    INC_RL =
+    LIB_RL = -lreadline
 endif
 
 PROD=0
@@ -25,7 +35,7 @@ LIBFT= libft
 
 
 %.o:%.c
-	$(CC) $(GFLAGS)  -g -c $< -o $@
+	$(CC) $(GFLAGS) $(INC_RL) -g -c $< -o $@
 
 OBJS_MAIN=$(SRCS_MAIN:%.c=%.o)
 OBJS_PARSER=$(SRCS_PARSER:%.c=%.o)
@@ -48,13 +58,13 @@ OBJS_T= $(OBJS_TEST) $(OBJS_BUILTIN) $(OBJS_EXEC) $(OBJS_PARSER)
 .PHONY: clean fclean run git testenv var lib tenv
 
 $(NAME): $(OBJS)
-	$(CC) $(GFLAGS) $(OBJS) -L$(LIBFT) -lft -o $(NAME) -lreadline
-	
+	$(CC) $(GFLAGS) $(OBJS) -L$(LIBFT) -lft -o $(NAME) $(LIB_RL)
+    
 run: $(NAME)
 ifeq ($(OS), Darwin)
 	./$(NAME)
 else ifeq ($(OS), Linux)
-	valgrind --leak-check=full --log-file=val_report -s ./$(NAME)
+    valgrind --leak-check=full --log-file=val_report -s ./$(NAME)
 endif
 
 # cleaning rules
@@ -71,17 +81,16 @@ mclean:
 	rm -f $(MEMORY_CHECK_PATH)/*
 
 tenv: $(OBJS_T)
-# check if the PROD variable env value. The PROD variable define the path file for compilation especialy for the main().
 ifeq ($(PROD), 0)
 	@echo "\033[44m *** Start $(NAME) in test env \033[0m"
 ifeq ($(NOFLAGS), 1)
 	@echo "\033[41m *** NO FLAGS! \033[0m\n"
 endif
 ifeq ($(OS), Darwin)
-	$(CC) $(GFLAGS) -fsanitize=address  $(OBJS_T) -L $(LIBFT) -lft  -lreadline -o bin/test
+	$(CC) $(GFLAGS) $(INC_RL) -fsanitize=address  $(OBJS_T) -L $(LIBFT) -lft $(LIB_RL) -o bin/test
 	@bin/test
 else ifeq ($(OS), Linux)
-	@$(CC) $(GFLAGS) -g $(OBJS_T) -L$(LIBFT) -lft -lreadline -o test
+	@$(CC) $(GFLAGS) -g $(OBJS_T) -L$(LIBFT) -lft $(LIB_RL) -o test
 	@valgrind --leak-check=full --track-origins=yes --log-file=valg_test  -s ./test
 endif
 else ifeq ($(PROD), $(EMPTY))

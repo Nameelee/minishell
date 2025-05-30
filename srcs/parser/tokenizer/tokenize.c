@@ -530,31 +530,22 @@ static t_token *_argument(t_token *command_node) {
 }
 */
 
-static t_token *find_last_argument(t_token *command_node) {
-    if (!command_node) return NULL;
-    t_token *current = command_node;
-    // Traverse down the right links as long as they are WORDs OR VARs (arguments)
-    while (current->right &&
-           (current->right->token == WORD || current->right->token == VAR)) { // Added VAR
-        current = current->right;
-    }
-    return current;
-}
 
 
-static t_token *handle_operator_node(t_token *op_node, t_token **root_ptr) {
-    t_token *current_root = *root_ptr;
 
-    // Operator becomes the new root, previous root becomes left child
-    op_node->left = current_root;
-    if (current_root) {
-        current_root->parent = op_node;
-    }
-    *root_ptr = op_node; // Update the root pointer in the caller
+// static t_token *handle_operator_node(t_token *op_node, t_token **root_ptr) {
+//     t_token *current_root = *root_ptr;
 
-    // Pipe's right child is linked later when the next command/operand arrives
-    return *root_ptr; // Return the new root
-}
+//     // Operator becomes the new root, previous root becomes left child
+//     op_node->left = current_root;
+//     if (current_root) {
+//         current_root->parent = op_node;
+//     }
+//     *root_ptr = op_node; // Update the root pointer in the caller
+
+//     // Pipe's right child is linked later when the next command/operand arrives
+//     return *root_ptr; // Return the new root
+// }
 
 
 
@@ -655,127 +646,181 @@ t_token *ft_create_ast(t_token *token_list)
 }
 */
 
+
+
+// AST 노드와 그 자식들을 재귀적으로 해제하는 함수 (구현 필요)
+// static void free_ast_recursive(t_token *node) {
+//     if (!node) return;
+//     free_ast_recursive(node->left);
+//     free_ast_recursive(node->right);
+//     if (node->string) free(node->string);
+//     free(node);
+// }
+
+// 단일 토큰 노드의 내용과 노드 자체를 해제하는 함수 (구현 필요)
+// static void free_single_token_node_content_and_node(t_token *node) {
+//     if (!node) return;
+//     if (node->string) free(node->string);
+//     free(node);
+// }
+
+// 토큰 리스트 전체를 해제하는 함수 (구현 필요)
+// static void free_token_list(t_token *list_head) {
+//     t_token *current = list_head;
+//     t_token *next;
+//     while (current) {
+//         next = current->right; // 토큰 리스트는 ->right로 연결되어 있다고 가정
+//         free_single_token_node_content_and_node(current);
+//         current = next;
+//     }
+// }
+
+// mini_latest/srcs/parser/tokenizer/tokenize.c 내의 함수
+
+// find_last_argument 함수 (이전 제공 코드 또는 사용자 정의)
+static t_token *find_last_argument(t_token *command_node) {
+    if (!command_node) return NULL;
+    t_token *current = command_node;
+    while (current->right &&
+           (current->right->token == WORD || current->right->token == VAR || current->right->token == ARG)) {
+        current = current->right;
+    }
+    return current;
+}
+// ... (필요한 메모리 해제 함수들)
+
 t_token *ft_create_ast(t_token *token_list)
 {
     t_token *root = NULL;
     t_token *new_node = NULL;
-    t_token *last_command_node = NULL; 
+    t_token *current_simple_cmd_head = NULL;
 
     while (token_list)
     {
         new_node = token_list;
-        token_list = new_node->right; 
+        token_list = new_node->right;
         new_node->left = NULL; new_node->right = NULL; new_node->parent = NULL;
         int token_type = new_node->token;
 
-        if (!root) // First token of a potential command sequence
-        {
-            if (IS_COMMAND_COMPONENT(token_type)) { // CMD, BUILTIN, WORD, VAR
-                root = new_node;
-                last_command_node = new_node;
-            } else if (IS_REDIR_OPERATOR(token_type)) { // <, >, >>, <<
-                root = new_node; // Redirection is the root for now
-                if (!token_list || !IS_FILENAME_TYPE(token_list->token)) {
-                    fprintf(stderr, "minishell: syntax error: missing or invalid filename after '%s'\n", root->string);
-                    // Consider freeing 'root' if it was allocated by ft_new_token_node and won't be used
-                    return NULL; 
-                }
-                t_token *filename_node = token_list; token_list = filename_node->right;
-                filename_node->left = NULL; filename_node->right = NULL; filename_node->parent = root;
-                root->right = filename_node;
-                // root->left is NULL, waiting for a command. last_command_node is NULL.
-            } else { // Any other token type is unexpected at the start
-                fprintf(stderr, "Minishell AST Error: Unexpected token '%s' (type %d) at start.\n",
-                        new_node->string ? new_node->string : "N/A", token_type);
+        if (IS_PIPE_OPERATOR(token_type)) {
+            if (!root || !current_simple_cmd_head) {
+                fprintf(stderr, "minishell: syntax error near unexpected token `|'\n");
                 return NULL;
             }
+            new_node->left = root;
+            if (root) root->parent = new_node;
+            root = new_node;
+            current_simple_cmd_head = NULL;
         }
-        else // root already exists, building onto the AST
-        {
-            // Condition 1: Current token is an operator
-            if (IS_ANY_OPERATOR(token_type)) {
-                t_token *current_operator_node = new_node;
+        else if (IS_REDIR_OPERATOR(token_type)) {
+            if (!token_list || !IS_FILENAME_TYPE(token_list->token)) {
+                fprintf(stderr, "minishell: syntax error: missing or invalid filename after '%s'\n", new_node->string);
+                return NULL;
+            }
+            t_token *filename_node = token_list; token_list = filename_node->right;
+            filename_node->left = NULL; filename_node->right = NULL;
+            new_node->right = filename_node;
+            filename_node->parent = new_node;
 
-                if (root->token == PIPE && root->right != NULL && IS_REDIR_OPERATOR(current_operator_node->token)) {
-                    // Redirection applies to command on right of an existing pipe
-                    t_token *command_on_right_of_pipe = root->right;
-                    command_on_right_of_pipe = handle_operator_node(current_operator_node, &command_on_right_of_pipe);
-                    if (!command_on_right_of_pipe) return NULL; // handle_operator_node failed
-                    root->right = command_on_right_of_pipe; 
+            if (current_simple_cmd_head == NULL) {
+                if (root == NULL) {
+                    root = new_node;
+                } else if (root->token == PIPE && root->right == NULL) {
+                    root->right = new_node;
+                    new_node->parent = root;
+                } else if (IS_REDIR_OPERATOR(root->token) && root->left == NULL) {
+                    new_node->left = root;
+                    if(root) root->parent = new_node;
+                    root = new_node;
                 } else {
-                    // Operator applies to the current 'root' or becomes the new root
-                    root = handle_operator_node(current_operator_node, &root);
-                    if (!root) return NULL; // handle_operator_node failed
-                }
-                
-                // Filename/delimiter handling for redirection operators
-                if (IS_REDIR_OPERATOR(current_operator_node->token)) {
-                    if (!token_list || !IS_FILENAME_TYPE(token_list->token)) {
-                        fprintf(stderr, "minishell: syntax error: missing or invalid filename after '%s'\n", current_operator_node->string);
-                        return NULL; // Cleanup might be needed for 'root'
-                    }
-                    t_token *filename_node = token_list; token_list = filename_node->right;
-                    filename_node->left = NULL; filename_node->right = NULL; filename_node->parent = current_operator_node;
-                    current_operator_node->right = filename_node;
-                    
-                    if (current_operator_node->left) { 
-                        last_command_node = current_operator_node->left;
-                    } else { 
-                        last_command_node = NULL; 
-                    }
-                } else { // It's a PIPE operator
-                    last_command_node = NULL; // After a pipe, expect a new command
-                }
-            }
-            // Condition 2: Current root is a REDIRECTION waiting for its command, AND new token is a command component
-            else if (IS_REDIR_OPERATOR(root->token) && root->left == NULL && IS_COMMAND_COMPONENT(token_type))
-            {
-                root->left = new_node; // Link 'echo' as the command for '>'
-                new_node->parent = root;
-                last_command_node = new_node; // 'echo' is now the current command head
-            }
-            // Condition 3: Current root is a PIPE waiting for its right-hand command, AND new token is a command component
-            else if (root->token == PIPE && root->right == NULL && IS_COMMAND_COMPONENT(token_type))
-            { 
-                root->right = new_node; 
-                new_node->parent = root;
-                last_command_node = new_node; 
-            }
-            // Condition 4: Current token is an argument
-            else if (IS_ARGUMENT_TYPE(token_type)) 
-            { 
-                if (!last_command_node) { 
-                    fprintf(stderr, "Minishell AST Error: Argument '%s' (type %d) found but no active command (LCN is NULL).\n",
-                            new_node->string ? new_node->string : "N/A", token_type);
+                    fprintf(stderr, "Minishell AST Error: Prefix redirection '%s' in an unexpected AST state. Root: %d (%s)\n",
+                            new_node->string, root ? root->token : -1, root ? root->string: "NULL");
                     return NULL;
                 }
-                t_token *attach_point = find_last_argument(last_command_node); 
-                if (!attach_point) { 
-                     fprintf(stderr, "Minishell AST Error: Could not find attach point for argument '%s' to LCN '%s'.\n", new_node->string ? new_node->string : "N/A", last_command_node->string ? last_command_node->string : "N/A_LCN");
+            } else {
+                t_token **target_subtree_root_ptr;
+                if (root->token == PIPE) {
+                    if(root->right == NULL) {
+                        fprintf(stderr, "Minishell AST Error: Inconsistent state for redirection on pipe RHS (RHS is NULL but CSC_Head is not).\n");
+                        return NULL;
+                    }
+                    target_subtree_root_ptr = &root->right;
+                } else {
+                    target_subtree_root_ptr = &root;
+                }
+                new_node->left = *target_subtree_root_ptr;
+                if (*target_subtree_root_ptr) (*target_subtree_root_ptr)->parent = new_node;
+                *target_subtree_root_ptr = new_node;
+            }
+        }
+        else if (IS_COMMAND_COMPONENT(token_type)) {
+            if (current_simple_cmd_head == NULL) {
+                current_simple_cmd_head = new_node; // 이 명령어가 새로운 csc_head가 됨
+
+                if (root == NULL) { // AST의 첫 노드
+                    root = new_node;
+                } else if (root->token == PIPE && root->right == NULL) { // 파이프 오른쪽의 첫 명령어
+                    root->right = new_node;
+                    new_node->parent = root;
+                }
+                // *** 핵심 수정: 파이프 RHS의 리다이렉션 다음에 오는 명령어 처리 ***
+                else if (root->token == PIPE && root->right &&
+                           IS_REDIR_OPERATOR(root->right->token) && root->right->left == NULL) {
+                    // 예: A | > out CMD. root=PIPE, root->right=REDIR. REDIR->left에 CMD 연결.
+                    root->right->left = new_node;
+                    new_node->parent = root->right;
+                }
+                // *** 일반 접두사 리다이렉션 체인 다음에 오는 명령어 처리 ***
+                else if (IS_REDIR_OPERATOR(root->token) && root->left == NULL) {
+                    t_token *attach_redir = root;
+                    // 가장 안쪽(왼쪽)으로 파고들어가서 명령어를 붙일 리다이렉션을 찾음
+                    while(attach_redir->left != NULL && IS_REDIR_OPERATOR(attach_redir->left->token) ) {
+                        attach_redir = attach_redir->left;
+                    }
+                    if(IS_REDIR_OPERATOR(attach_redir->token) && attach_redir->left == NULL) {
+                        attach_redir->left = new_node;
+                        new_node->parent = attach_redir;
+                    } else {
+                        fprintf(stderr, "Minishell AST Error: Command '%s' cannot find place in prefix redirection chain. Attach_Redir: %s (Token: %d)\n",
+                                new_node->string, attach_redir ? attach_redir->string : "NULL", attach_redir ? attach_redir->token : -1);
+                        return NULL;
+                    }
+                } else {
+                    // 위의 조건들에서 처리되지 못하고 csc_head가 NULL인 상태로 명령어가 오면 오류
+                    fprintf(stderr, "Minishell AST Error: Command component '%s' (type %d) in unexpected state when current_simple_cmd_head is NULL. Root token: %d (%s)\n",
+                            new_node->string, new_node->token, root ? root->token : -1, root ? root->string : "N/A");
+                    return NULL;
+                }
+            } else { // 기존 명령어(csc_head)의 인자
+                t_token *attach_point = find_last_argument(current_simple_cmd_head);
+                 if (!attach_point) {
+                    fprintf(stderr, "Minishell AST Error: Cannot find attach point for argument '%s' to command '%s'.\n",
+                            new_node->string, current_simple_cmd_head->string);
                     return NULL;
                 }
                 attach_point->right = new_node;
                 new_node->parent = attach_point;
-            } 
-            // Condition 5: Unexpected token if none of the above matched
-            else 
-            {
-                fprintf(stderr, "Minishell AST Error: Unexpected token '%s' (type %d) when root is type %d (LCN type %d).\n",
-                        new_node->string ? new_node->string : "N/A", token_type, root->token, last_command_node ? last_command_node->token : -1);
-                return NULL;
             }
         }
-    } 
-    
-    // Final validation: if root is a redirection, it must have a command (left child) by now.
-    if (root && IS_REDIR_OPERATOR(root->token) && !root->left) {
-        fprintf(stderr, "Minishell AST Error: Missing command for redirection '%s' at end of input.\n", root->string);
-        // Consider freeing root and its children if appropriate before returning NULL
-        // free_ast_recursive(root); // Example
-        return NULL; 
+        else {
+            fprintf(stderr, "Minishell AST Error: Unknown or unhandled token type %d for string '%s'.\n",
+                    token_type, new_node->string ? new_node->string : "N/A");
+            return NULL;
+        }
     }
+
+    // 최종 유효성 검사
+    if (root && root->token == PIPE && (!root->left || !root->right)) {
+        fprintf(stderr, "minishell: syntax error: incomplete pipe\n");
+        return NULL;
+    }
+    // 리다이렉션 노드가 명령어를 가지고 있는지 검사 (더 정교하게)
+    // 이 검사는 AST를 한 번 순회하여 모든 REDIR 노드의 left가 NULL이 아닌지 확인해야 함
+    // (단, 파이프의 마지막 RHS가 REDIR이고 그 REDIR의 left가 NULL인 경우는 실행 전까지는 유효할 수 없음)
+
     return root;
 }
+
 
 // --- ft_parse (Main parsing function) ---
 t_token *ft_parse(char *str) {
