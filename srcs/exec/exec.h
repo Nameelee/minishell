@@ -25,5 +25,6 @@ int preprocess_heredocs(t_token *node);
 void close_all_heredoc_fds_in_tree(t_token *node);
 int read_heredoc_to_pipe(const char *delimiter); // 이것은 이미 exec.h에 있습니다.
 char *expand_all_variables(const char *input_str, char **envp, bool is_single_quoted, bool is_double_quoted);
+int is_expendable_variable(char *var, char **envp);
 
 #endif

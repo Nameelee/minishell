@@ -189,6 +189,7 @@ static int execute_pipe(t_token *node, char ***envp) {
 
 // execute_ast 함수 (heredoc 호출 부분 주석 해제)
 void execute_ast(t_token *node, char ***envp, bool is_top_level) {
+
     if (!node) {
         if (is_top_level) g_exit_status = 0;
         return;
@@ -300,9 +301,31 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
             exit(127); 
         }
         else {
-            fprintf(stderr, "minishell: execute_ast: unknown or unexecutable command node type %d (%s)\n", 
-                    command_node_to_exec->token, command_node_to_exec->string ? command_node_to_exec->string : "N/A");
-            exit(1); 
+
+
+            if(ft_is_variable(command_node_to_exec->string) && !is_expendable_variable(command_node_to_exec->string, *envp))
+                exit(0);
+            else if (ft_is_variable(command_node_to_exec->string) && is_expendable_variable(command_node_to_exec->string, *envp) == 1)
+            {
+                write(STDERR_FILENO, " Is a directory\n", ft_strlen(" Is a directory\n"));
+                exit(126);
+            }
+            else if(is_expendable_variable(command_node_to_exec->string, *envp) == 2)
+            {
+                write(STDERR_FILENO, " command not found\n", ft_strlen(" command not found\n"));
+                exit(127);
+            }
+            // Gestion explicite des erreurs "type de nœud non exécutable ou inconnu"
+            if (!command_node_to_exec || !command_node_to_exec->string) {
+                fprintf(stderr, "minishell: command not found\n");
+                exit(127);
+            }
+
+            
+            // Par défaut : commande inconnue (type invalide ou expansion incorrecte)
+            fprintf(stderr, "minishell: %s: command not found (token type %d)\n",
+                    command_node_to_exec->string, command_node_to_exec->token);
+            exit(127);
         }
     }
 }

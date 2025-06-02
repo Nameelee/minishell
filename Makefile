@@ -61,12 +61,12 @@ $(NAME): $(OBJS)
 	$(CC) $(GFLAGS) $(OBJS) -L$(LIBFT) -lft -o $(NAME) $(LIB_RL)
     
 run: $(NAME)
-ifeq ($(OS), Darwin)
-	./$(NAME)
-else ifeq ($(OS), Linux)
-    valgrind --leak-check=full --log-file=val_report -s ./$(NAME)
-endif
-
+	valgrind --leak-check=full --log-file=val_report -s ./$(NAME)
+# ifeq ($(OS), Darwin)
+# 	./$(NAME)
+# else ifeq ($(OS), Linux)
+#     valgrind --leak-check=full --log-file=val_report -s ./$(NAME)
+# endif
 # cleaning rules
 
 clean:

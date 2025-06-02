@@ -226,3 +226,22 @@ char *expand_all_variables(const char *input_str, char **envp, bool is_single_qu
     }
     return result_buffer;
 }
+
+int is_expendable_variable(char *var, char **envp)
+{
+
+    int i;
+    char *var_env;
+
+    i = 0;
+    if(var[0] == '$' && var[1] == '\0')
+        return(2);
+    while (envp[i])
+    {
+        var_env = ft_extract_var(envp[i]);
+        if(!ft_strncmp(var_env, &var[1], ft_strlen_longest(var, var_env)))
+            return (1);
+        i++;
+    }
+    return(0);
+}
