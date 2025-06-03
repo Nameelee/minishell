@@ -302,19 +302,20 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
         }
         else {
 
-
-            if(ft_is_variable(command_node_to_exec->string) && !is_expendable_variable(command_node_to_exec->string, *envp))
+            if(is_expendable_variable(command_node_to_exec->string, *envp) == 2
+                || !ft_strncmp(command_node_to_exec->string,"$?",ft_strlen_longest(command_node_to_exec->string, "$?")))
+            {
+                write(STDERR_FILENO, " command not found\n", ft_strlen(" command not found\n"));
+                exit(127);
+            }
+            else if(ft_is_variable(command_node_to_exec->string) && !is_expendable_variable(command_node_to_exec->string, *envp))
                 exit(0);
             else if (ft_is_variable(command_node_to_exec->string) && is_expendable_variable(command_node_to_exec->string, *envp) == 1)
             {
                 write(STDERR_FILENO, " Is a directory\n", ft_strlen(" Is a directory\n"));
                 exit(126);
             }
-            else if(is_expendable_variable(command_node_to_exec->string, *envp) == 2)
-            {
-                write(STDERR_FILENO, " command not found\n", ft_strlen(" command not found\n"));
-                exit(127);
-            }
+            
             // Gestion explicite des erreurs "type de nœud non exécutable ou inconnu"
             if (!command_node_to_exec || !command_node_to_exec->string) {
                 fprintf(stderr, "minishell: command not found\n");
