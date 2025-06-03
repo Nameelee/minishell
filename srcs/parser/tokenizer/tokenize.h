@@ -51,9 +51,9 @@
 
 
 typedef enum e_heredoc_state {
-    HD_NOT_PROCESSED,     // Initial state
-    HD_PROCESSING_FAILED, // An attempt was made but failed
-    HD_PROCESSED_OK       // Successfully read into heredoc_pipe_fd
+    HD_NOT_PROCESSED,
+    HD_PROCESSING_FAILED,
+    HD_PROCESSED_OK
 } t_heredoc_state;
 
 typedef struct s_token
@@ -66,23 +66,22 @@ typedef struct s_token
     struct s_token  *parent;
     struct s_token  *right;
     struct s_token  *left;
-	int             heredoc_pipe_fd; // Stores read end of pipe for <<, -1 initially
+	int             heredoc_pipe_fd;
 	int             single_quote;
     int             double_quote;
-    t_heredoc_state heredoc_state; // Tracks the processing state
+    t_heredoc_state heredoc_state;
 } t_token;
 
-// Structure to hold a list of redirections
 typedef struct s_redir {
-    int type;           // Redirection type (REDIR_OPEN, REDIR_WRITE, etc.)
-    char *filename;     // Filename or delimiter (delimiter only for info if needed)
-    t_token *heredoc_node; // Pointer to the HEREDOC t_token node, NULL otherwise
+    int type;
+    char *filename;
+    t_token *heredoc_node;
     struct s_redir *next;
 } t_redir;
 
 t_token *ft_tokenize(char *str);
-t_token *ft_create_ast(t_token *token_list);//Nami add
-t_token *ft_parse(char *str);//Nami add 
+t_token *ft_create_ast(t_token *token_list);
+t_token *ft_parse(char *str);
 t_token *ft_new_token_node(char *str, int token);
 void    ft_add_back_node(t_token **lst, t_token *node);
 int     ft_is_commande(char *str);
@@ -108,5 +107,10 @@ int apply_redirections(t_redir *list);
 void free_redir_list(t_redir *list);
 
 void    ft_binary_tree_traversal(t_token *node);
+
+int apply_redir_heredoc(t_redir *redir_item);
+int apply_redir_append(t_redir *redir_item);
+int apply_redir_write(t_redir *redir_item); 
+int apply_redir_open(t_redir *redir_item); 
 
 #endif
