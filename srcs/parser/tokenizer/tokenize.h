@@ -25,6 +25,10 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <stdbool.h>
+#include <assert.h>
+#include <errno.h> 
+#include <string.h> 
+#include <fcntl.h> 
 
 #include "../../../include/main.h"
 
@@ -89,6 +93,12 @@ int     ft_get_token(char *str);
 const char *get_token_type_string(int token_type);
 int     ft_count_occurence_of_token(t_token *token_lst, int token);
 int     ft_delete_token_lst(t_token **token_lst);
+char	*ft_get_total_path(char *path, char *str);
+
+bool is_whitespace(char c);
+bool is_operator_char(char c); 
+void free_token_list(t_token *list); 
+void free_single_token_node_content_and_node(t_token *node); 
 
 //display fonction
 void    ft_display_commande_lst(t_token *token_lst);

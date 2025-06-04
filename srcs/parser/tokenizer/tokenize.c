@@ -1,151 +1,4 @@
 #include "tokenize.h"
-#include <assert.h>
-#include <errno.h> 
-#include <string.h> 
-#include <stdio.h> 
-#include <stdlib.h>
-#include <unistd.h> 
-#include <fcntl.h>  
-
-static bool is_whitespace(char c);
-static bool is_operator_char(char c); 
-static void free_token_list(t_token *list); 
-static void free_single_token_node_content_and_node(t_token *node); 
-
-static bool is_whitespace(char c) 
-{ 
-	return (c == ' ' || c == '\t' || c == '\n' 
-		|| c == '\v' || c == '\f' || c == '\r'); 
-}
-
-static bool is_operator_char(char c) 
-{ 
-	return (c == '|' || c == '<' || c == '>'); 
-}
-
-static void free_single_token_node_content_and_node(t_token *node) 
-{ 
-    if (!node) 
-		return;
-    if (node->string) 
-		free(node->string);
-    node->string = NULL;
-    free(node);
-}
-
-static void free_token_list(t_token *list_head) { 
-    t_token *current = list_head; t_token *next;
-    while (current) {
-        next = current->right; 
-        free_single_token_node_content_and_node(current);
-        current = next;
-    }
-}
-
-
-
-
-
-// --- Redirection List Handling Functions ---
-void add_redirection_to_list(t_redir **list, int type, const char *filename_or_delimiter, t_token *heredoc_node) {
-    t_redir *new_redir = (t_redir *)malloc(sizeof(t_redir));
-    if (!new_redir) { perror("minishell: malloc in add_redirection_to_list"); return; }
-    new_redir->type = type; new_redir->filename = NULL;
-    if (filename_or_delimiter) {
-        new_redir->filename = ft_strdup(filename_or_delimiter);
-        if (!new_redir->filename && filename_or_delimiter[0] != '\0') { perror("minishell: ft_strdup in add_redirection_to_list"); free(new_redir); return; }
-    }
-    new_redir->heredoc_node = heredoc_node; new_redir->next = *list; *list = new_redir;
-}
-int apply_redirections(t_redir *list) {
-    t_redir *current = list; int status = 0;
-    while (current != NULL) {
-        status = 0; 
-        switch (current->type) {
-            case REDIR_OPEN: status = apply_redir_open(current); break;
-            case REDIR_WRITE: status = apply_redir_write(current); break;
-            case REDIR_WRITE_A: status = apply_redir_append(current); break;
-            case HEREDOC: status = apply_redir_heredoc(current); break;
-            default: fprintf(stderr, "minishell: unknown redirection type %d\n", current->type); status = -1; break;
-        }
-        if (status == -1) return (-1); 
-        current = current->next;
-    }
-    return (0);
-}
-void free_redir_list(t_redir *list) {
-    t_redir *current = list; t_redir *next;
-    while (current) {
-        next = current->next;
-        if(current->filename) free(current->filename);
-        free(current); current = next;
-    }
-} 
-
-// --- Tokenizer and Parser Utility Functions ---
-const char *get_token_type_string(int token_type) { 
-    if (token_type == WORD) return "WORD"; 
-    if (token_type == CMD) return "CMD";
-    if (token_type == ARG) return "ARG";
-    if (token_type == PIPE) return "PIPE";
-    if (token_type == REDIR_OPEN) return "INPUT_REDIRECT (<)"; 
-    if (token_type == REDIR_WRITE) return "OUTPUT_REDIRECT (>)"; 
-    if (token_type == REDIR_WRITE_A) return "APPEND_REDIRECT (>>)"; 
-    if (token_type == DOUBLE_REDIR) return "DOUBLE_REDIR";
-    if (token_type == HEREDOC) return "HEREDOC (<<)";
-    if (token_type == VAR) return "VAR";
-    if (token_type == BUILTIN) return "BUILTIN"; 
-    return "UNKNOWN";
-}
-
-void print_ast(t_token *node, int level) {
-    if (node == NULL) { return; }
-    for (int i = 0; i < level - 1; i++) { printf("|   "); }
-    if (level > 0) { printf("|-- "); }
-    printf("%s", get_token_type_string(node->token));
-    if (node->string) {
-         printf(" (%s)", node->string);
-    }
-    printf("\n");
-    print_ast(node->left, level + 1);     
-    print_ast(node->right, level + 1);    
-}
-
-void print_ast_start(t_token *root) { print_ast(root, 0); }
-
-int ft_delete_token_lst(t_token **token_lst) { 
-    if (!token_lst) return 0;
-    free_token_list(*token_lst);
-    *token_lst = NULL; 
-    return(1);
-}
-
-t_token *ft_new_token_node(char *str, int token) { 
-    t_token *token_node = (t_token *)malloc(sizeof(t_token));
-    if(!token_node) { perror("malloc in ft_new_token_node"); return(NULL); }
-	token_node->string = NULL; 
-    if (str) { 
-        token_node->string = ft_strdup(str); 
-        if (!token_node->string && str[0] != '\0') { 
-             perror("ft_strdup in ft_new_token_node"); free(token_node); return (NULL);    
-         }
-    }
-    token_node->token = token;
-	token_node->followed_by_whitespace = false;
-    token_node->asso = ft_get_associativity(token);
-    token_node->precedence = ft_get_precedence(token);
-	token_node->heredoc_pipe_fd = -1; 
-	token_node->heredoc_state = HD_NOT_PROCESSED; 
-    token_node->left = NULL; token_node->right = NULL; token_node->parent = NULL;
-    token_node->single_quote = 0; token_node->double_quote = 0;
-    return(token_node);
-}
-
-void ft_add_back_node(t_token **lst, t_token *node) { 
-    if(!lst || !node) return;
-    if(!*lst) *lst = node;
-    else { t_token *curr = *lst; while(curr->right) curr = curr->right; curr->right = node; }
-}
 
 // --- Tokenizer ---
 
@@ -289,16 +142,17 @@ t_token *ft_tokenize(char *str) {
     return token_list_head;
 }
 
+
 static t_token *find_last_argument(t_token *command_node) {
     if (!command_node) return NULL;
     t_token *current = command_node;
     while (current->right &&
-           (current->right->token == WORD || current->right->token == VAR || current->right->token == ARG)) {
+           (current->right->token == WORD || current->right->token == VAR || current->right->token == ARG)) 
+	{
         current = current->right;
     }
     return current;
 }
-// ... (필요한 메모리 해제 함수들)
 
 t_token *ft_create_ast(t_token *token_list)
 {
