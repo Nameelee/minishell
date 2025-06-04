@@ -51,6 +51,7 @@
 #define IS_ANY_OPERATOR(type) (IS_REDIR_OPERATOR(type) || IS_PIPE_OPERATOR(type))
 #define IS_COMMAND_COMPONENT(type) (type == CMD || type == BUILTIN || type == WORD || type == VAR)
 #define IS_ARGUMENT_TYPE(type) (type == WORD || type == VAR)
+
 #endif
 
 
@@ -83,6 +84,15 @@ typedef struct s_redir {
     struct s_redir *next;
 } t_redir;
 
+/**
+ * @brief AST 빌드 중 상태를 관리하는 구조체
+ */
+typedef struct s_ast_state {
+    t_token **root;     // 전체 AST의 루트 노드
+    t_token **csc_head; // 현재 처리 중인 간단한 명령어(simple command)의 헤드
+    t_token *new_node;  // 현재 처리할 새 토큰 노드
+} t_ast_state;
+
 t_token *ft_tokenize(char *str);
 t_token *ft_create_ast(t_token *token_list);
 t_token *ft_parse(char *str);
@@ -99,6 +109,12 @@ bool is_whitespace(char c);
 bool is_operator_char(char c); 
 void free_token_list(t_token *list); 
 void free_single_token_node_content_and_node(t_token *node); 
+
+//create_ast
+t_token *get_next_node(t_token **token_list);
+t_token *find_last_argument(t_token *cmd_head);
+int handle_pipe(t_ast_state *s);
+int handle_redir(t_ast_state *s, t_token **token_list);
 
 //display fonction
 void    ft_display_commande_lst(t_token *token_lst);
