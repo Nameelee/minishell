@@ -17,7 +17,6 @@ void ft_binary_tree_traversal(t_token *node)
     if(!node)
         return;
     ft_binary_tree_traversal(node->left);
-
     printf("node %s\n", node->string);
     //execute_ast(node);
     ft_binary_tree_traversal(node->right);

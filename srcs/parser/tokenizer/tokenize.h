@@ -93,6 +93,52 @@ typedef struct s_ast_state {
     t_token *new_node;  // 현재 처리할 새 토큰 노드
 } t_ast_state;
 
+typedef enum e_finalize_quote_type {
+    FNL_QUOTE_NONE,       // 따옴표 없음, 혹은 복합적인 경우 (기존 로직상 특별한 플래그 설정 없음)
+    FNL_QUOTE_ALL_SINGLE, // 모든 세그먼트가 단일 따옴표로만 구성 (all_single && !has_unquoted && !all_double)
+    FNL_QUOTE_ALL_DOUBLE  // 모든 세그먼트가 이중 따옴표로만 구성 (all_double && !has_unquoted && !all_single)
+} t_finalize_quote_type;
+
+typedef struct s_word_aggregator {
+    char    **buffer_ptr;      // 현재 빌드 중인 단어 버퍼에 대한 포인터
+    bool    *all_s_ptr;        // 모든 세그먼트가 단일 따옴표였는지 여부에 대한 포인터
+    bool    *all_d_ptr;        // 모든 세그먼트가 이중 따옴표였는지 여부에 대한 포인터
+    bool    *has_unq_ptr;      // 따옴표 없는 세그먼트가 있었는지 여부에 대한 포인터
+    int     *count_ptr;        // 현재까지 처리된 세그먼트 수에 대한 포인터
+    t_token **list_head_ptr;   // 오류 발생 시 전체 토큰 리스트 해제를 위한 포인터
+} t_word_aggregator;
+
+typedef struct s_parse_state {
+    const char *str_content; // Renamed to avoid conflict if struct variable is 'str'
+    size_t     *current_idx_ptr;
+    size_t     total_len;
+} t_parse_state;
+
+typedef struct s_quoted_piece_data {
+    char *extracted_str;            // 추출된 문자열 조각
+    bool is_single_quoted_segment; // 현재 조각이 단일 따옴표로만 묶였는지 여부
+    bool is_double_quoted_segment; // 현재 조각이 이중 따옴표로만 묶였는지 여부
+    bool op_success;               // 작업 성공 여부
+} t_quoted_piece_data;
+
+typedef struct s_unquoted_piece_data {
+    char *extracted_str;
+    bool op_success;
+} t_unquoted_piece_data;
+
+typedef struct s_op_build_state {
+    char   op_str[3]; // Buffer for the operator string (e.g., ">", ">>")
+    int    type;      // Token type, initialized to WORD
+    size_t op_len;    // Operator length, initialized to 1
+} t_op_build_state;
+
+typedef struct s_segment_extraction_result {
+    char *piece_str;    // The extracted string segment
+    bool is_single;     // True if the segment was purely single-quoted
+    bool is_double;     // True if the segment was purely double-quoted
+    bool success;       // True if extraction was successful
+} t_segment_extraction_result;
+
 t_token *ft_tokenize(char *str);
 t_token *ft_create_ast(t_token *token_list);
 t_token *ft_parse(char *str);
@@ -108,22 +154,23 @@ char	*ft_get_total_path(char *path, char *str);
 //tokenize
 
 t_token *ft_handle_operator(const char *str, size_t *i, size_t input_len);
-char *ft_extract_quoted_segment(const char *str, size_t *i,
-                                       size_t input_len, char quote_char,
-                                       t_token **list_head, char *buffer_to_free_on_error);
+char	*ft_extract_quoted_segment(t_parse_state *p_state, char quote_char, t_word_aggregator *agg);
 char *ft_extract_unquoted_segment(const char *str, size_t *i, size_t input_len);
 char *ft_process_segment_concatenation(char *current_buffer, char *piece_str,
                                              t_token **list_head);
-t_token *ft_finalize_word_node(char *buffer, bool all_single, bool all_double, bool has_unquoted, int seg_count);
+t_token *ft_finalize_word_node(char *buffer, t_finalize_quote_type quote_status,int seg_count);
 t_token *ft_handle_word(const char *str, size_t *i, size_t input_len, t_token **list_head);
-bool ft_append_next_segment(const char *str, size_t *idx, size_t input_len, t_token **list_head, char **buffer_ptr, bool *all_s, bool *all_d, bool *has_unq, int *count);
-
-
+bool ft_append_next_segment(const char *str, size_t *idx, size_t input_len, t_word_aggregator *agg);
 bool is_whitespace(char c);
 bool is_operator_char(char c); 
 void free_token_list(t_token *list); 
-void free_single_token_node_content_and_node(t_token *node); 
-
+void free_single_token_node_content_and_node(t_token *node);
+t_segment_extraction_result ft_extract_current_segment_info(
+    const char *str, size_t *idx, size_t input_len, t_word_aggregator *agg);
+t_unquoted_piece_data	ft_handle_unquoted_piece(
+	const char *str_input, size_t *idx_ptr, size_t len_input, t_word_aggregator *agg);
+t_quoted_piece_data	ft_handle_quoted_piece(
+	const char *str_input, size_t *idx_ptr, size_t len_input, t_word_aggregator *agg);
 //create_ast
 t_token *get_next_node(t_token **token_list);
 t_token *find_last_argument(t_token *cmd_head);

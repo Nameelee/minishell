@@ -12,8 +12,6 @@
 
 #include "../include/main.h"
 
-void	free_duplicated_env(char **dup_envp);
-
 int	g_exit_status = 0;
 
 void	sigint_handler(int signal)
@@ -21,7 +19,6 @@ void	sigint_handler(int signal)
 	if (signal == SIGINT)
 	{
 		write(STDOUT_FILENO, "\n", 1);
-		
 		rl_on_new_line();
 		rl_replace_line("", 0);
 		rl_redisplay();
