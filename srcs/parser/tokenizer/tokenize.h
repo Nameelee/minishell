@@ -105,6 +105,20 @@ int     ft_count_occurence_of_token(t_token *token_lst, int token);
 int     ft_delete_token_lst(t_token **token_lst);
 char	*ft_get_total_path(char *path, char *str);
 
+//tokenize
+
+t_token *ft_handle_operator(const char *str, size_t *i, size_t input_len);
+char *ft_extract_quoted_segment(const char *str, size_t *i,
+                                       size_t input_len, char quote_char,
+                                       t_token **list_head, char *buffer_to_free_on_error);
+char *ft_extract_unquoted_segment(const char *str, size_t *i, size_t input_len);
+char *ft_process_segment_concatenation(char *current_buffer, char *piece_str,
+                                             t_token **list_head);
+t_token *ft_finalize_word_node(char *buffer, bool all_single, bool all_double, bool has_unquoted, int seg_count);
+t_token *ft_handle_word(const char *str, size_t *i, size_t input_len, t_token **list_head);
+bool ft_append_next_segment(const char *str, size_t *idx, size_t input_len, t_token **list_head, char **buffer_ptr, bool *all_s, bool *all_d, bool *has_unq, int *count);
+
+
 bool is_whitespace(char c);
 bool is_operator_char(char c); 
 void free_token_list(t_token *list); 
