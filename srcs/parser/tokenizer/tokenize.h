@@ -139,6 +139,20 @@ typedef struct s_segment_extraction_result {
     bool success;       // True if extraction was successful
 } t_segment_extraction_result;
 
+typedef struct s_word_build_state {
+    char *buffer;           // The string buffer being built.
+    bool all_s_q;           // Flag: all segments were single-quoted.
+    bool all_d_q;           // Flag: all segments were double-quoted.
+    bool has_unq;           // Flag: an unquoted segment was found.
+    int  seg_count;         // The number of segments concatenated.
+} t_word_build_state;
+
+typedef enum e_tokenize_status {
+    TOKENIZE_SUCCESS_CONTINUE, // A token was successfully parsed, continue looping.
+    TOKENIZE_SUCCESS_BREAK,    // No token parsed, but no error; stop looping.
+    TOKENIZE_ERROR             // A fatal syntax error occurred.
+} t_tokenize_status;
+
 t_token *ft_tokenize(char *str);
 t_token *ft_create_ast(t_token *token_list);
 t_token *ft_parse(char *str);
