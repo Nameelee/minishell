@@ -33,23 +33,23 @@ void	ft_display_commande_lst(t_token *token_lst)
 char	*ft_get_str_token(int token)
 {
 	if (token == WORD)
-		return ("WORD ");
+		return ("WORD");
 	if (token == CMD)
-		return ("COMMANDE ");
+		return ("COMMANDE");
 	if (token == ARG)
-		return ("ARG ");
+		return ("ARG");
 	if (token == PIPE)
-		return ("PIPE ");
+		return ("PIPE");
 	if (token == REDIR_OPEN)
-		return ("REDIR_OPEN ");
+		return ("REDIR_OPEN");
 	if (token == REDIR_WRITE)
-		return ("REDIR_WRITE ");
+		return ("REDIR_WRITE");
 	if (token == REDIR_WRITE_A)
-		return ("REDIR_WRITE_A ");
+		return ("REDIR_WRITE_A");
 	if (token == DOUBLE_REDIR)
-		return ("DOUBLE_REDIR ");
+		return ("DOUBLE_REDIR");
 	if (token == HEREDOC)
-		return ("HEREDOC ");
+		return ("HEREDOC");
 	if (token == VAR)
 		return ("VAR");
 	if (token == BUILTIN)
