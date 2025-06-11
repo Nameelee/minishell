@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/stat.h>
 // readline 관련 헤더 (read_heredoc_to_pipe에서 필요할 수 있음)
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -187,6 +188,15 @@ static int execute_pipe(t_token *node, char ***envp) {
     return 1;
 }
 
+// argv 배열과 그 내용물을 해제하는 헬퍼 함수
+static void free_argv(char **argv) {
+    if (!argv) return;
+    for (int i = 0; argv[i]; i++) {
+        free(argv[i]);
+    }
+    free(argv);
+}
+
 // execute_ast 함수 (heredoc 호출 부분 주석 해제)
 void execute_ast(t_token *node, char ***envp, bool is_top_level) {
 
@@ -279,7 +289,7 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
             exit(0); // Bash는 이런 경우 성공(0)으로 종료
         }
 
-        // 명령어 실행f
+        // 명령어 실행
         if (command_node_to_exec->token == PIPE) {
             int pipe_status = execute_pipe(command_node_to_exec, envp);
             exit(pipe_status); 
@@ -291,14 +301,44 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
         else if (command_node_to_exec->token == CMD || command_node_to_exec->token == WORD) {
             char **argv = build_argv_from_ast(command_node_to_exec, envp);
             if (!argv || !argv[0]) {
-                if (argv) free(argv); // argv 배열만 해제
-                fprintf(stderr, "minishell: Error building argv for command (token: %s)\n", command_node_to_exec->string ? command_node_to_exec->string : "N/A");
-                exit(127); 
+                if (argv) free(argv);
+                fprintf(stderr, "minishell: : command not found\n");
+                exit(127);
             }
+
+            if (ft_strchr(argv[0], '/'))
+            {
+                struct stat path_stat;
+                if (stat(argv[0], &path_stat) == 0) { // stat 성공, 경로 존재
+                    if (S_ISDIR(path_stat.st_mode)) {
+                        fprintf(stderr, "minishell: %s: Is a directory\n", argv[0]);
+                        free_argv(argv);
+                        exit(126);
+                    }
+                }
+            }
+
             execvp(argv[0], argv);
-            perror(argv[0]); // execvp 실패 시에만 실행됨
-            if (argv) free(argv); // argv 배열만 해제
-            exit(127); 
+            
+            // execvp는 오류 발생 시에만 반환됨
+            fprintf(stderr, "minishell: %s: ", argv[0]);
+            if (errno == EACCES) {
+                fprintf(stderr, "Permission denied\n");
+                free_argv(argv);
+                exit(126);
+            } else if (errno == ENOENT) {
+                if (ft_strchr(argv[0], '/')) {
+                     fprintf(stderr, "No such file or directory\n");
+                } else {
+                     fprintf(stderr, "command not found\n");
+                }
+                free_argv(argv);
+                exit(127);
+            } else {
+                perror(NULL); // 그 외 다른 오류 메시지 출력
+                free_argv(argv);
+                exit(127);
+            }
         }
         else {
 
@@ -312,8 +352,7 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
                 exit(0);
             else if (ft_is_variable(command_node_to_exec->string) && is_expendable_variable(command_node_to_exec->string, *envp) == 1)
             {
-                // write(STDERR_FILENO, " Is a directory\n", ft_strlen(" Is a directory\n"));
-				ft_putendl_fd(" Is a directory", STDERR_FILENO);
+                write(STDERR_FILENO, " Is a directory\n", ft_strlen(" Is a directory\n"));
                 exit(126);
             }
             
