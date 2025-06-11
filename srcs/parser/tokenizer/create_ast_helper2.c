@@ -29,3 +29,47 @@ t_token	*find_last_argument(t_token *cmd_head)
 	}
 	return (current);
 }
+
+t_token	*find_redir_attach_point(t_token *redir_chain)
+{
+	t_token	*current;
+
+	current = redir_chain;
+	while (current->left && IS_REDIR_OPERATOR(current->left->token))
+		current = current->left;
+	return (current);
+}
+
+int	handle_command(t_ast_state *s)
+{
+	t_token	*attach_point;
+
+	if (*(s->csc_head) == NULL)
+	{
+		*(s->csc_head) = s->new_node;
+		if (!attach_new_command(s))
+			return (0);
+	}
+	else
+	{
+		attach_point = find_last_argument(*(s->csc_head));
+		if (!attach_point)
+			return (0);
+		attach_point->right = s->new_node;
+		s->new_node->parent = attach_point;
+	}
+	return (1);
+}
+
+/**
+ * @brief 완성된 AST가 문법적으로 유효한지 최종 검사합니다.
+ */
+int	is_valid_ast(t_token *root)
+{
+	if (root && root->token == PIPE && (!root->left || !root->right))
+	{
+		fprintf(stderr, "minishell: syntax error: incomplete pipe\n");
+		return (0);
+	}
+	return (1);
+}

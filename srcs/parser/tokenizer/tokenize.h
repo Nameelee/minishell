@@ -11,26 +11,25 @@
 /* ************************************************************************** */
 
 #ifndef TOKENIZE_H
-#define TOKENIZE_H
+# define TOKENIZE_H
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <errno.h> 
-#include <string.h> 
-#include <fcntl.h> 
-
-#include "../../../include/main.h"
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <sys/time.h>
+# include <sys/resource.h>
+# include <sys/wait.h>
+# include <unistd.h>
+# include <dirent.h>
+# include <stdlib.h>
+# include <stdio.h>
+# include <unistd.h>
+# include <dirent.h>
+# include <stdbool.h>
+# include <assert.h>
+# include <errno.h> 
+# include <string.h> 
+# include <fcntl.h> 
+# include "../../../include/main.h" 
 
 #define WORD 0
 #define CMD 1
@@ -192,6 +191,8 @@ t_token	*find_redir_attach_point(t_token *redir_chain);
 int handle_pipe(t_ast_state *s);
 int handle_redir(t_ast_state *s, t_token **token_list);
 int attach_new_command(t_ast_state *s);
+int	is_valid_ast(t_token *root);
+int	handle_command(t_ast_state *s);
 
 //display fonction
 void    ft_display_commande_lst(t_token *token_lst);

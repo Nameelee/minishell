@@ -23,6 +23,7 @@
 # include "export_env_unset/environnement.h"
 # include "../../libft/libft.h"
 # include "../parser/tokenizer/tokenize.h"
+# include "../../include/main.h" 
 
 int		ft_pwd(char **string);
 int		ft_cd(char **path);
