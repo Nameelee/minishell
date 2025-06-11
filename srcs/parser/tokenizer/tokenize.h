@@ -188,8 +188,10 @@ t_quoted_piece_data	ft_handle_quoted_piece(
 //create_ast
 t_token *get_next_node(t_token **token_list);
 t_token *find_last_argument(t_token *cmd_head);
+t_token	*find_redir_attach_point(t_token *redir_chain);
 int handle_pipe(t_ast_state *s);
 int handle_redir(t_ast_state *s, t_token **token_list);
+int attach_new_command(t_ast_state *s);
 
 //display fonction
 void    ft_display_commande_lst(t_token *token_lst);
