@@ -22,7 +22,7 @@
  * @param seg_count 총 세그먼트 수
  * @return 생성된 토큰 노드, 내용이 없거나 실패 시 NULL
  */
-t_token	*ft_finalize_word_node(char *buffer, t_finalize_quote_type quote_status,
+t_token	*ft_finalize_word_node(char *buffer, t_fin_quote quote_status,
 	int seg_count)
 {
 	t_token	*new_node;
@@ -79,9 +79,9 @@ static bool	ft_init_word_build(t_word_build_state *state,
  * @param all_s True if all segments were single-quoted.
  * @param has_u True if any unquoted segment was found.
  * @param all_d True if all segments were double-quoted.
- * @return The appropriate t_finalize_quote_type enum value.
+ * @return The appropriate t_fin_quote enum value.
  */
-static	t_finalize_quote_type	ft_get_finalize_quote_status(
+static	t_fin_quote	ft_get_finalize_quote_status(
 	bool all_s, bool has_u, bool all_d)
 {
 	if (all_s && !has_u && !all_d)
@@ -96,7 +96,7 @@ t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
 {
 	t_word_build_state		state;
 	t_word_aggregator		aggregator;
-	t_finalize_quote_type	quote_status;
+	t_fin_quote				quote_status;
 	t_token					*new_node;
 
 	if (!ft_init_word_build(&state, &aggregator, list_head))

@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
 /**
  * @brief 토큰 리스트에서 다음 노드를 분리하고 기본 초기화를 수행합니다.
  */
@@ -40,7 +42,7 @@ int	attach_prefix_redir(t_ast_state *s)
 		(*(s->root))->right = s->new_node;
 		s->new_node->parent = *(s->root);
 	}
-	else if (IS_REDIR_OPERATOR((*(s->root))->token))
+	else if (is_redir_operator((*(s->root))->token))
 	{
 		s->new_node->left = *(s->root);
 		(*(s->root))->parent = s->new_node;
@@ -98,7 +100,7 @@ int	handle_redir(t_ast_state *s, t_token **token_list)
 	t_token	*filename_node;
 	t_token	**attach_target;
 
-	if (!*token_list || !IS_FILENAME_TYPE((*token_list)->token))
+	if (!*token_list || !is_filename_type((*token_list)->token))
 	{
 		fprintf(stderr, "minishell: syntax error: missing filename\n");
 		return (0);

@@ -19,7 +19,7 @@
  * @param list_head 오류 발생 시 해제할 토큰 리스트 헤드에 대한 포인터
  * @return 결합된 새 버퍼, 실패 시 NULL
  */
-char	*ft_process_segment_concatenation(char *current_buffer, char *piece_str,
+char	*ft_seg_concaten(char *current_buffer, char *piece_str,
 	t_token **list_head)
 {
 	char	*temp_buffer;
@@ -44,15 +44,15 @@ char	*ft_process_segment_concatenation(char *current_buffer, char *piece_str,
  * @param idx_ptr 현재 인덱스에 대한 포인터 (업데이트됨)
  * @param len_input 입력 문자열 길이
  * @param agg 단어 구성을 위한 상태 집계자 구조체 포인터
- * @return t_quoted_piece_data 구조체 (추출된 문자열, 따옴표 타입, 성공 여부 포함)
+ * @return t_quoted_pdata 구조체 (추출된 문자열, 따옴표 타입, 성공 여부 포함)
  */
-t_quoted_piece_data	ft_handle_quoted_piece(
+t_quoted_pdata	ft_handle_quoted_piece(
 	const char *str_input, size_t *idx_ptr,
 	size_t len_input, t_word_aggregator *agg)
 {
-	t_quoted_piece_data	data_out;
-	t_parse_state		p_state;
-	char				quote_char;
+	t_quoted_pdata	data_out;
+	t_parse_state	p_state;
+	char			quote_char;
 
 	data_out.extracted_str = NULL;
 	data_out.is_single_quoted_segment = false;
@@ -76,11 +76,11 @@ t_quoted_piece_data	ft_handle_quoted_piece(
 /**
  * @brief Helper to extract an unquoted piece and update related flags.
  */
-t_unquoted_piece_data	ft_handle_unquoted_piece(
+t_unquot_pdata	ft_handle_unquoted_piece(
 	const char *str_input, size_t *idx_ptr,
 		size_t len_input, t_word_aggregator *agg)
 {
-	t_unquoted_piece_data	data_out;
+	t_unquot_pdata	data_out;
 
 	data_out.extracted_str = NULL;
 	data_out.op_success = false;
@@ -104,12 +104,12 @@ t_unquoted_piece_data	ft_handle_unquoted_piece(
 bool	ft_append_next_segment(const char *str, size_t *idx, size_t input_len,
 	t_word_aggregator *agg)
 {
-	t_segment_extraction_result	extraction_info;
+	t_seg_extract	extraction_info;
 
 	extraction_info = ft_extract_current_segment_info(str, idx, input_len, agg);
 	if (!extraction_info.success)
 		return (false);
-	*agg->buffer_ptr = ft_process_segment_concatenation(*agg->buffer_ptr,
+	*agg->buffer_ptr = ft_seg_concaten(*agg->buffer_ptr,
 			extraction_info.piece_str, agg->list_head_ptr);
 	if (!*agg->buffer_ptr)
 		return (false);

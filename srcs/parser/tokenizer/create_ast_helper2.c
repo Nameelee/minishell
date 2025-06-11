@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
 
 /**
  * @brief 현재 간단한 명령어의 마지막 인자를 찾습니다.
@@ -23,7 +25,7 @@ t_token	*find_last_argument(t_token *cmd_head)
 	current = cmd_head;
 	if (!current)
 		return (NULL);
-	while (current->right && IS_ARGUMENT_TYPE(current->right->token))
+	while (current->right && is_argument_type(current->right->token))
 	{
 		current = current->right;
 	}
@@ -35,7 +37,7 @@ t_token	*find_redir_attach_point(t_token *redir_chain)
 	t_token	*current;
 
 	current = redir_chain;
-	while (current->left && IS_REDIR_OPERATOR(current->left->token))
+	while (current->left && is_redir_operator(current->left->token))
 		current = current->left;
 	return (current);
 }

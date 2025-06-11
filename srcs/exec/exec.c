@@ -279,7 +279,7 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
             exit(0); // Bash는 이런 경우 성공(0)으로 종료
         }
 
-        // 명령어 실행
+        // 명령어 실행f
         if (command_node_to_exec->token == PIPE) {
             int pipe_status = execute_pipe(command_node_to_exec, envp);
             exit(pipe_status); 
@@ -312,7 +312,8 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
                 exit(0);
             else if (ft_is_variable(command_node_to_exec->string) && is_expendable_variable(command_node_to_exec->string, *envp) == 1)
             {
-                write(STDERR_FILENO, " Is a directory\n", ft_strlen(" Is a directory\n"));
+                // write(STDERR_FILENO, " Is a directory\n", ft_strlen(" Is a directory\n"));
+				ft_putendl_fd(" Is a directory", STDERR_FILENO);
                 exit(126);
             }
             

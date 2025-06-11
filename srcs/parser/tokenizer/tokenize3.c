@@ -14,11 +14,11 @@
 /**
  * @brief 따옴표로 시작하는 세그먼트를 처리하고 추출 결과를 반환합니다.
  */
-static t_segment_extraction_result	ft_process_quoted_segment_extraction(
+static t_seg_extract	ft_process_quoted_segment_extraction(
 	const char *str, size_t *idx, size_t input_len, t_word_aggregator *agg)
 {
-	t_segment_extraction_result	result;
-	t_quoted_piece_data			q_data;
+	t_seg_extract	result;
+	t_quoted_pdata	q_data;
 
 	result.piece_str = NULL;
 	result.is_single = false;
@@ -37,11 +37,11 @@ static t_segment_extraction_result	ft_process_quoted_segment_extraction(
 /**
  * @brief 따옴표 없이 시작하는 세그먼트를 처리하고 추출 결과를 반환합니다.
  */
-static t_segment_extraction_result	ft_process_unquoted_segment_extraction(
+static t_seg_extract	ft_process_unquoted_segment_extraction(
 	const char *str, size_t *idx, size_t input_len, t_word_aggregator *agg)
 {
-	t_segment_extraction_result	result;
-	t_unquoted_piece_data		u_data;
+	t_seg_extract	result;
+	t_unquot_pdata	u_data;
 
 	result.piece_str = NULL;
 	result.is_single = false;
@@ -56,7 +56,7 @@ static t_segment_extraction_result	ft_process_unquoted_segment_extraction(
 	return (result);
 }
 
-t_segment_extraction_result	ft_extract_current_segment_info(
+t_seg_extract	ft_extract_current_segment_info(
 	const char *str, size_t *idx, size_t input_len, t_word_aggregator *agg)
 {
 	if (str[*idx] == '"' || str[*idx] == '\'')

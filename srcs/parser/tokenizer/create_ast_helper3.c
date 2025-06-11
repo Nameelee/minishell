@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
 
 /**
  * @brief Attaches a new command to the right side of a pipe node in the AST.
@@ -64,7 +66,7 @@ int	attach_new_command(t_ast_state *s)
 		*(s->root) = new_cmd;
 	else if (root->token == PIPE)
 		attach_cmd_to_pipe(s);
-	else if (IS_REDIR_OPERATOR(root->token))
+	else if (is_redir_operator(root->token))
 		attach_cmd_to_redir(s);
 	else
 	{

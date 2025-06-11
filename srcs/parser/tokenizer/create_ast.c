@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
 
 /**
  * @brief Initializes the state required for building the AST.
@@ -39,17 +41,17 @@ static void	ft_init_ast_state(t_token **root, t_token **csc_head,
 static bool	ft_process_next_token(t_ast_state *state, t_token **token_list)
 {
 	state->new_node = get_next_node(token_list);
-	if (IS_PIPE_OPERATOR(state->new_node->token))
+	if (is_pipe_operator(state->new_node->token))
 	{
 		if (!handle_pipe(state))
 			return (false);
 	}
-	else if (IS_REDIR_OPERATOR(state->new_node->token))
+	else if (is_redir_operator(state->new_node->token))
 	{
 		if (!handle_redir(state, token_list))
 			return (false);
 	}
-	else if (IS_COMMAND_COMPONENT(state->new_node->token))
+	else if (is_command_component(state->new_node->token))
 	{
 		if (!handle_command(state))
 			return (false);
