@@ -15,7 +15,7 @@
 /**
  * @brief Appends a single character to a buffer, handling memory reallocation.
  */
-static char	*append_char(char *buffer, char c)
+char	*append_char(char *buffer, char c)
 {
 	char	append_str[2];
 	char	*new_buffer;
@@ -83,8 +83,7 @@ static bool	ft_expand_and_append_value(char **buffer, const char *var_name,
  * @brief Handles a '$' character, dispatching to expand a variable or
  * treat it as a literal. Advances the position pointer.
  */
-static bool	handle_variable_expansion(const char **pos, char **buffer,
-	char **envp)
+bool	handle_variable_expansion(const char **pos, char **buffer, char **envp)
 {
 	char	*var_name;
 	size_t	var_len_in_input;
@@ -108,61 +107,4 @@ static bool	handle_variable_expansion(const char **pos, char **buffer,
 	if (!*buffer)
 		return (false);
 	return (true);
-}
-
-static bool	ft_process_expansion_chunk(const char **pos, char **buffer,
-	char **envp, bool is_double_quoted, const char *input_str)
-{
-	if (**pos == '$' && !(is_double_quoted && *pos > input_str
-			&& *(*pos - 1) == '\\'))
-	{
-		if (!handle_variable_expansion(pos, buffer, envp))
-			return (false);
-	}
-	else if (is_double_quoted && **pos == '\\'
-		&& (*(*pos + 1) == '$' || *(*pos + 1) == '"' || *(*pos + 1) == '\\'))
-	{
-		(*pos)++;
-		*buffer = append_char(*buffer, *(*pos));
-		(*pos)++;
-	}
-	else
-	{
-		*buffer = append_char(*buffer, *(*pos));
-		(*pos)++;
-	}
-	if (!*buffer)
-		return (false);
-	return (true);
-}
-
-/**
- * @brief Expands all variables in a string, respecting quoting rules.
- */
-char	*expand_all_variables(const char *input_str, char **envp,
-	bool is_single_quoted, bool is_double_quoted)
-{
-	char		*buffer;
-	const char	*pos;
-
-if (is_single_quoted)
-	{
-		if (input_str)
-			return (ft_strdup(input_str));
-		else
-			return (ft_strdup(""));
-	}
-	buffer = ft_strdup("");
-	if (!buffer)
-		return (NULL);
-	pos = input_str;
-	while (*pos)
-	{
-		if (!ft_process_expansion_chunk(&pos, &buffer, envp,
-				is_double_quoted, input_str))
-		{
-			return (NULL);
-		}
-	}
-	return (buffer);
 }

@@ -22,8 +22,11 @@ static int	count_occurrences(const char *str, const char *pattern)
 
 	count = 0;
 	temp_ptr = str;
-	while ((temp_ptr = strstr(temp_ptr, pattern)))
+	while (1)
 	{
+		temp_ptr = strstr(temp_ptr, pattern);
+		if (!temp_ptr)
+			break ;
 		count++;
 		temp_ptr += strlen(pattern);
 	}
@@ -42,18 +45,15 @@ static void	perform_exit_status_replacement(char *dest, const char *src,
 
 	current_pos = src;
 	status_len = strlen(status_str);
-	while ((found_pos = strstr(current_pos, "$?")) != NULL)
+	found_pos = strstr(current_pos, "$?");
+	while (found_pos != NULL)
 	{
-		// Copy part before "$?"
 		strncpy(dest, current_pos, found_pos - current_pos);
 		dest += (found_pos - current_pos);
-		// Copy status string
 		strcpy(dest, status_str);
 		dest += status_len;
-		// Move position in source string
 		current_pos = found_pos + 2;
 	}
-	// Copy remaining part of the string
 	strcpy(dest, current_pos);
 }
 
