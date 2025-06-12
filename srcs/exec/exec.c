@@ -1,4 +1,15 @@
-// 파일: srcs/exec/exec.c
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                         ::::::::           */
+/*   exec.c                                              :+:    :+:           */
+/*                                                      +:+                   */
+/*   By: jelee <marvin@42.fr>                          +#+                    */
+/*                                                    +#+                     */
+/*   Created: 2025/06/12 14:09:23 by jelee          #+#    #+#                */
+/*   Updated: 2025/06/12 14:09:26 by jelee          ########   odam.nl        */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "exec.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,53 +73,81 @@ int read_heredoc_to_pipe(const char *delimiter) {
 }
 
 
-// build_argv_from_ast 함수 (이전 답변의 안정화된 버전)
-static char **build_argv_from_ast(t_token *cmd_node, char ***envp_ptr) { // Added envp_ptr
-    if (!cmd_node) return NULL;
-    int count = 0;
+// build_argv_from_ast: 비어있는 변수 확장을 처리하도록 수정된 함수
+static char **build_argv_from_ast(t_token *cmd_node, char ***envp_ptr)
+{
+    if (!cmd_node)
+        return (NULL);
+    
+    int max_count = 0;
     t_token *curr = cmd_node;
-    // Count command and its arguments (WORD, VAR tokens to the right)
-    while (curr && (curr->token == CMD || curr->token == BUILTIN || curr->token == WORD || curr->token == VAR)) {
-        count++;
+    while (curr && (curr->token == CMD || curr->token == BUILTIN || curr->token == WORD || curr->token == VAR))
+    {
+        max_count++;
         curr = curr->right;
     }
-    if (count == 0) return NULL;
+    if (max_count == 0)
+        return (NULL);
 
-    char **argv = (char **)malloc(sizeof(char *) * (count + 1));
-    if (!argv) {
+    char **argv = (char **)malloc(sizeof(char *) * (max_count + 1));
+    if (!argv)
+    {
         perror("minishell: malloc for argv failed");
-        return NULL;
+        return (NULL);
     }
 
     curr = cmd_node;
-    for (int i = 0; i < count; i++) {
-        if (curr && curr->string) {
-            // Use the new expansion function
-            argv[i] = expand_all_variables(curr->string, *envp_ptr, curr->single_quote, curr->double_quote);
-            if (!argv[i]) { // Expansion failed (e.g., malloc error inside)
+    int actual_i = 0;
+    for (int token_i = 0; token_i < max_count; token_i++)
+    {
+        if (curr && curr->string)
+        {
+            char *expanded_str = expand_all_variables(curr->string, *envp_ptr, curr->single_quote, curr->double_quote);
+            if (!expanded_str)
+            {
                 perror("minishell: argument expansion failed");
-                for (int k = 0; k < i; k++) free(argv[k]);
+                for (int k = 0; k < actual_i; k++)
+                    free(argv[k]);
                 free(argv);
-                return NULL;
+                return (NULL);
             }
-        } else {
+            
+            // 핵심 변경사항: 확장 결과가 비어있고, 큰따옴표로 묶이지 않았다면 인자 리스트에서 제거
+            if (expanded_str[0] == '\0' && curr->double_quote == 0)
+            {
+                free(expanded_str);
+            }
+            else
+            {
+                argv[actual_i] = expanded_str;
+                actual_i++;
+            }
+        }
+        else
+        {
             fprintf(stderr, "minishell: build_argv_from_ast: encountered NULL string or node unexpectedly.\n");
-            for (int k = 0; k < i; k++) free(argv[k]); // Free previously allocated strings
+            for (int k = 0; k < actual_i; k++)
+                free(argv[k]);
             free(argv);
-            return NULL;
+            return (NULL);
         }
         curr = curr->right;
     }
-    argv[count] = NULL;
-    return argv;
+    argv[actual_i] = NULL;
+    
+    // 모든 인자가 비어있는 문자열로 확장되어 사라진 경우
+    if (actual_i == 0)
+    {
+        free(argv);
+        return (NULL);
+    }
+    return (argv);
 }
-
 
 // ft_execute_builtin 함수 (이전 답변의 안정화된 버전)
 int ft_execute_builtin(t_token *node, char ***envp_ptr) 
 {
-	//int squote = 0;
-    //int dquote = 0;
+
     char **original_argv = NULL;
     int exit_status = 1;
 
@@ -204,13 +243,6 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
         if (is_top_level) g_exit_status = 0;
         return;
     }
-	// printf("Current: '%s'\n", node->string);
-	// if (node->parent)
-	// 	printf("Parent: '%s'\n", node->parent->string);
-	// if (node->left)
-	// 	printf("Left: '%s'\n", node->left->string);
-	// if (node->right)
-	// 	printf("Right: '%s'\n", node->right->string);
     if (is_top_level) {
         // ****** Heredoc 관련 함수 호출부 유지 (이제 선언과 빈 정의가 있음) ******
         if (preprocess_heredocs(node) == -1) { 
@@ -259,9 +291,6 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
         t_redir *redir_list = NULL;
         t_token *command_node_to_exec = node; 
 
-        // 리다이렉션 정보 추출 (AST 구조에 따라 이 부분은 달라질 수 있음)
-        // 현재 AST 구조: REDIR_NODE -> left = CMD_CHAIN, right = FILENAME_NODE
-        // CMD_CHAIN: CMD_TOKEN -> right = ARG1 -> right = ARG2 ...
         while (command_node_to_exec && 
                (command_node_to_exec->token == REDIR_OPEN ||
                 command_node_to_exec->token == REDIR_WRITE ||
@@ -300,10 +329,11 @@ void execute_ast(t_token *node, char ***envp, bool is_top_level) {
         }
         else if (command_node_to_exec->token == CMD || command_node_to_exec->token == WORD) {
             char **argv = build_argv_from_ast(command_node_to_exec, envp);
-            if (!argv || !argv[0]) {
-                if (argv) free(argv);
-                fprintf(stderr, "minishell: : command not found\n");
-                exit(127);
+            
+            // 만약 argv가 NULL이면, 명령어 전체가 비어있는 변수 확장 등으로 사라졌다는 의미.
+            // bash에서는 오류가 아니므로, 성공(0)으로 종료.
+            if (!argv) {
+                exit(0);
             }
 
             if (ft_strchr(argv[0], '/'))
