@@ -19,8 +19,14 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <fcntl.h>
+# include <string.h>
+# include <errno.h>
+# include <sys/stat.h>
+# include <readline/readline.h>
+# include <readline/history.h>
 # include "../parser/tokenizer/tokenize.h"
 # include "../builtin/builtin.h"
+
 
 typedef struct s_token	t_token;
 // typedef struct s_exp_context

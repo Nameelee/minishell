@@ -19,59 +19,69 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
-// readline 관련 헤더 (read_heredoc_to_pipe에서 필요할 수 있음)
 #include <readline/readline.h>
 #include <readline/history.h>
 
 
-// ****** 추가: Heredoc 관련 임시 빈 함수 정의 (컴파일 오류 해결용) ******
-// TODO: 실제 heredoc 기능 구현 시 이 함수들을 채워야 합니다.
-int preprocess_heredocs(t_token *node) {
-    // 이 함수는 AST를 순회하며 heredoc (<<)을 찾아 처리하고,
-    // 그 결과를 t_token 노드의 heredoc_pipe_fd와 heredoc_state에 저장해야 합니다.
-    // 현재는 임시로 성공(0)을 반환합니다.
+int preprocess_heredocs(t_token *node)
+{
     (void)node; 
-    // fprintf(stderr, "DEBUG: preprocess_heredocs called (dummy implementation)\n");
-    return 0; 
+    return (0); 
 }
 
-void close_all_heredoc_fds_in_tree(t_token *node) {
-    // 이 함수는 AST를 순회하며 열려있는 모든 heredoc_pipe_fd를 닫아야 합니다.
+void close_all_heredoc_fds_in_tree(t_token *node)
+{
     (void)node; 
-    // fprintf(stderr, "DEBUG: close_all_heredoc_fds_in_tree called (dummy implementation)\n");
 }
-// ****** 빈 함수 정의 끝 ******
 
-// read_heredoc_to_pipe 함수 (사용자 제공 원본 또는 이전 수정본)
-// 이 함수는 실제 구현이 필요하며, 사용자님의 코드에 이미 존재할 가능성이 높습니다.
-// 만약 없다면, 아래는 기본적인 readline을 사용한 예시입니다.
-int read_heredoc_to_pipe(const char *delimiter) {
-    int pipefd[2];
-    char *line = NULL;
+/**
+ * @brief Reads user input for a heredoc and writes it to the provided pipe.
+ * @param write_fd  The file descriptor for the write-end of the pipe.
+ * @param delimiter The string that signals the end of input.
+ */
+static void heredoc_input_loop(int write_fd, const char *delimiter)//1
+{
+    char *line;
 
-    if (pipe(pipefd) == -1) {
-        perror("minishell: pipe for heredoc failed");
-        return -1;
-    }
-
-    while (1) {
-        line = readline("> "); // heredoc 프롬프트
-        if (!line) { // EOF (Ctrl+D)
-            fprintf(stderr, "minishell: warning: here-document delimited by end-of-file (wanted `%s')\n", delimiter);
-            break; 
+    while (1)
+    {
+        line = readline("> ");
+        if (!line) // Handle EOF (Ctrl+D)
+        {
+            fprintf(stderr, 
+                "minishell:here-doc delimited by end-of-file (wanted `%s')\n", 
+                delimiter);
+            break;
         }
-        if (strcmp(line, delimiter) == 0) {
+        if (strcmp(line, delimiter) == 0) // Handle delimiter
+        {
             free(line);
             break;
         }
-        write(pipefd[1], line, strlen(line));
-        write(pipefd[1], "\n", 1);
+        write(write_fd, line, strlen(line));
+        write(write_fd, "\n", 1);
         free(line);
     }
-    close(pipefd[1]); // 쓰기 파이프 끝을 닫음
-    return pipefd[0]; // 읽기 파이프 끝을 반환
 }
 
+/**
+ * @brief Creates a pipe and fills it with heredoc input.
+ * @param delimiter The heredoc delimiter string.
+ * @return The file descriptor for the read-end of the pipe, or -1 on error.
+ */
+int read_heredoc_to_pipe(const char *delimiter)//1
+{
+    int pipefd[2];
+
+    if (pipe(pipefd) == -1)
+    {
+        perror("minishell: pipe for heredoc failed");
+        return (-1);
+    }
+    heredoc_input_loop(pipefd[1], delimiter);
+    close(pipefd[1]); // Close the write-end, as it's no longer needed.
+    return (pipefd[0]); // Return the read-end.
+}
 
 // build_argv_from_ast: 비어있는 변수 확장을 처리하도록 수정된 함수
 static char **build_argv_from_ast(t_token *cmd_node, char ***envp_ptr)
@@ -171,10 +181,6 @@ int ft_execute_builtin(t_token *node, char ***envp_ptr)
     else if (ft_strncmp(original_argv[0], "pwd", 4) == 0) {
         exit_status = ft_pwd(original_argv);
     }
-    // ... (export, unset, env, exit need to use original_argv directly)
-    // For export, unset, env, if they do their own parsing/expansion, ensure they respect quotes.
-    // For ft_exit, it parses its numeric arg; ensure its input is correctly pre-processed if needed.
-    // The `expand_all_variables` should correctly prepare strings for these too.
     else if (ft_strncmp(original_argv[0], "export", 7) == 0) {
         exit_status = ft_export(envp_ptr, original_argv);
     } else if (ft_strncmp(original_argv[0], "unset", 6) == 0) {
@@ -182,8 +188,8 @@ int ft_execute_builtin(t_token *node, char ***envp_ptr)
     } else if (ft_strncmp(original_argv[0], "env", 4) == 0) {
         exit_status = ft_env(original_argv, envp_ptr);
     } else if (ft_strncmp(original_argv[0], "exit", 5) == 0) {
-        ft_exit(original_argv); // ft_exit handles its own exit, status might be set globally
-        exit_status = g_exit_status; // Or get it from g_exit_status if ft_exit updates it
+        ft_exit(original_argv);
+        exit_status = g_exit_status;
     }
     else {
         fprintf(stderr, "minishell: %s: builtin not recognized in ft_execute_builtin\n", original_argv[0]);
