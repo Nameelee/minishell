@@ -21,40 +21,57 @@ void	clean_swap(char **new, char **old)
 	free(tmp);
 }
 
+/**
+ * @brief Checks if a environment entry matches a given variable name.
+ * @param env_entry A string from the environment array (e.g., "PATH=...").
+ * @param var The variable name to search for (e.g., "PATH").
+ * @param var_len The pre-calculated length of the 'var' name.
+ * @return Returns true if the variable names match, false otherwise.
+ */
+static bool	is_matching_env_var(const char *env_entry, const char *var,
+				size_t var_len)
+{
+	char	*tmp_dup;
+	char	*env_var_name;
+	bool	is_match;
+
+	is_match = false;
+	tmp_dup = ft_strdup(env_entry);
+	if (!tmp_dup)
+		return (false);
+	env_var_name = ft_parse_env_variable(tmp_dup);
+	if (env_var_name)
+	{
+		if (ft_strlen(env_var_name) == var_len
+			&& ft_strncmp(env_var_name, var, var_len) == 0)
+		{
+			is_match = true;
+		}
+		free(env_var_name);
+	}
+	free(tmp_dup);
+	return (is_match);
+}
+
+/**
+ * @brief Finds the index of a variable within the environment array.
+ * @param envp The environment array (e.g., {"PATH=...", "USER=...", NULL}).
+ * @param var The variable name to find (e.g., "USER").
+ * @return The index of the variable if found, otherwise -1.
+ */
 int	ft_get_var_idx_in_env(char **envp, char *var)
 {
-	char	*env_var_name;
-	char	*tmp_env_entry_dup;
 	int		i;
 	size_t	var_len;
-	size_t	env_var_name_len;
 
-	i = 0;
 	if (!envp || !var)
 		return (-1);
+	i = 0;
 	var_len = ft_strlen(var);
 	while (envp[i])
 	{
-		tmp_env_entry_dup = ft_strdup(envp[i]);
-		if (!tmp_env_entry_dup)
-		{
-			i++;
-			continue ;
-		}
-		env_var_name = ft_parse_env_variable(tmp_env_entry_dup);
-		if (env_var_name)
-		{
-			env_var_name_len = ft_strlen(env_var_name);
-			if (env_var_name_len == var_len
-					&& ft_strncmp(env_var_name, var, var_len) == 0)
-			{
-				free(tmp_env_entry_dup);
-				free(env_var_name);
-				return (i);
-			}
-			free(env_var_name);
-		}
-		free(tmp_env_entry_dup);
+		if (is_matching_env_var(envp[i], var, var_len))
+			return (i);
 		i++;
 	}
 	return (-1);

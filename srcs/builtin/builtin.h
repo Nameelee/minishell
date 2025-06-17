@@ -42,4 +42,6 @@ void	print_exit_message(int code);
 int		print_export_message(int code);
 void	*print_add_variable_msg(char *var);
 
+char	*ft_get_home_path(char *path, int cd);
+
 #endif

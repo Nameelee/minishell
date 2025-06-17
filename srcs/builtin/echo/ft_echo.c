@@ -12,103 +12,68 @@
 
 #include "../builtin.h"
 
-void	print_echo(char *str, char **envp)
+/**
+ * @brief Checks if a single argument string is a valid "-n" option.
+ * A valid option starts with '-' and is followed by one or more 'n' characters.
+ * @param arg The argument string to check.
+ * @return True if the argument is a valid "-n" option, false otherwise.
+ */
+static bool	is_valid_n_option(const char *arg)
+{
+	size_t	i;
+
+	if (arg[0] != '-' || arg[1] != 'n')
+		return (false);
+	i = 1;
+	while (arg[i])
+	{
+		if (arg[i] != 'n')
+			return (false);
+		i++;
+	}
+	return (true);
+}
+
+/**
+ * @brief Parses arguments to handle all valid "-n" options at the start.
+ * @param args The full argument array.
+ * @param n_option_flag A pointer to a boolean that is set to true if any
+ * valid -n option is found.
+ * @return The index of the first argument that is not an "-n" option.
+ */
+static int	parse_echo_options(char **args, bool *n_option_flag)
 {
 	int	i;
 
-	i = 0;
-	while (str[i])
+	i = 1;
+	*n_option_flag = false;
+	while (args[i] && is_valid_n_option(args[i]))
 	{
-		if (str[i] == '$' && str[i + 1] != '?'
-			&& str[i + 1] != '\0' && str[i + 1] != 32)
-		{
-			if (ft_print_variable(envp, &str[i++], &i) == -1)
-				break ;
-		}
-		else if (str[i] == '$' && str[i + 1] == '?')
-		{
-
-			ft_print_variable_int_str(&str[i++]);
-		}
-		else
-			write(STDOUT_FILENO, &str[i], 1);
+		*n_option_flag = true;
 		i++;
 	}
+	return (i);
 }
 
-int	process_echo(char **split_args, char **envp, int n)
+/**
+ * @brief The echo command implementation. Handles the -n option.
+ * @param split_args The command and its arguments.
+ * @return Always returns 0.
+ */
+int	ft_echo(char **split_args)
 {
-	int	j;
+	int		arg_idx;
+	bool	n_option;
 
-	j = 0;
-	while (split_args[j])
+	arg_idx = parse_echo_options(split_args, &n_option);
+	while (split_args[arg_idx])
 	{
-		printf("I am here%s", split_args[j]);
-		print_echo(split_args[j], envp);
-		if (split_args[j + 1])
-			write(STDOUT_FILENO, " ", 1);
-		j++;
+		ft_putstr_fd(split_args[arg_idx], STDOUT_FILENO);
+		if (split_args[arg_idx + 1])
+			ft_putstr_fd(" ", STDOUT_FILENO);
+		arg_idx++;
 	}
-	if (!n)
-		write(STDOUT_FILENO, "\n", 1);
-	return (1);
-}
-
-void	process_single_echo(char **split_args, int n)
-{
-	int		i;
-	int		j;
-	char	*str;
-
-	i = 0;
-	while (split_args[i])
-	{
-		j = 0;
-		str = split_args[i];
-		while (str[j])
-		{
-			write(STDOUT_FILENO, &str[j], 1);
-			j++;
-		}
-		if (split_args[i + 1])
-			write(STDOUT_FILENO, " ", 1);
-		i++;
-	}
-	if (!n)
-		write(STDOUT_FILENO, "\n", 1);
-}
-
-int ft_echo(char **split_args)
-{
-    int i = 1;
-    bool n_option = false;
-
-    while (split_args[i] && ft_strncmp(split_args[i], "-n", 2) == 0) {
-        bool only_n_chars = true;
-        for (size_t j = 1; j < ft_strlen(split_args[i]); ++j) {
-            if (split_args[i][j] != 'n') {
-                only_n_chars = false;
-                break;
-            }
-        }
-        if (only_n_chars && ft_strlen(split_args[i]) >=2) {
-            n_option = true;
-            i++;
-        }
-		else
-            break;
-    }
-
-    int arg_idx = i;
-    while (split_args[arg_idx])
-	{
-        ft_putstr_fd(split_args[arg_idx], STDOUT_FILENO);
-        if (split_args[arg_idx + 1])
-            ft_putstr_fd(" ", STDOUT_FILENO);
-        arg_idx++;
-    }
-
-    if (!n_option)
-        ft_putstr_fd("\n", STDOUT_FILENO);
-    return (0);
+	if (!n_option)
+		ft_putstr_fd("\n", STDOUT_FILENO);
+	return (0);
 }
