@@ -14,13 +14,42 @@
 
 int	preprocess_heredocs(t_token *node)
 {
-	(void)node;
-	return (0);
+    if (!node)
+        return (0);
+    if (preprocess_heredocs(node->left) != 0)
+        return (-1);
+    if (preprocess_heredocs(node->right) != 0)
+        return (-1);
+    if (node->token == HEREDOC)
+    {
+        if (!node->right || !node->right->string)
+        {
+            fprintf(stderr, "minishell: syntax error: missing delimiter for heredoc\n");
+            node->heredoc_state = HD_PROCESSING_FAILED;
+            return (-1);
+        }
+        node->heredoc_pipe_fd = read_heredoc_to_pipe(node->right->string);
+        if (node->heredoc_pipe_fd < 0)
+        {
+            node->heredoc_state = HD_PROCESSING_FAILED;
+            return (-1);
+        }
+        node->heredoc_state = HD_PROCESSED_OK;
+	}
+    return (0);
 }
 
 void	close_all_heredoc_fds_in_tree(t_token *node)
 {
-	(void)node;
+    if (!node)
+        return;
+    close_all_heredoc_fds_in_tree(node->left);
+    close_all_heredoc_fds_in_tree(node->right);
+    if (node->token == HEREDOC && node->heredoc_pipe_fd >= 0)
+    {
+        close(node->heredoc_pipe_fd);
+        node->heredoc_pipe_fd = -1;
+    }
 }
 
 /**
