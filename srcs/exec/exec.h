@@ -75,5 +75,6 @@ pid_t	fork_right_child(t_token *node, char ***envp, int pipefd[2],
 pid_t	fork_left_child(t_token *node, char ***envp, int pipefd[2]);
 void	execute_pipe_right_child(t_token *node, char ***envp, int pipefd[2]);
 void	execute_pipe_left_child(t_token *node, char ***envp, int pipefd[2]);
+t_redir	*parse_redirection_nodes(t_token **cmd_node_ptr);
 
 #endif

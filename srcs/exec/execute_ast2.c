@@ -17,7 +17,7 @@
  * @param cmd_node_ptr A pointer to the command node, which will be updated.
  * @return A linked list of redirections (t_redir *).
  */
-static t_redir	*parse_redirection_nodes(t_token **cmd_node_ptr)
+t_redir	*parse_redirection_nodes(t_token **cmd_node_ptr)
 {
 	t_redir	*redir_list;
 
