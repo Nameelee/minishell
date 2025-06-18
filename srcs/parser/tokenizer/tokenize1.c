@@ -11,6 +11,17 @@
 /* ************************************************************************** */
 
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
+
+t_token	*ft_get_last_token(t_token *list)//NEW
+{
+	if (!list)
+		return (NULL);
+	while (list->right)
+		list = list->right;
+	return (list);
+}
 
 /**
  * @brief 최종 단어 버퍼로부터 토큰 노드를 생성하고 따옴표 플래그를 설정합니다.
@@ -22,6 +33,7 @@
  * @param seg_count 총 세그먼트 수
  * @return 생성된 토큰 노드, 내용이 없거나 실패 시 NULL
  */
+/*
 t_token	*ft_finalize_word_node(char *buffer, t_fin_quote quote_status,
 	int seg_count)
 {
@@ -41,6 +53,31 @@ t_token	*ft_finalize_word_node(char *buffer, t_fin_quote quote_status,
 	}
 	return (new_node);
 }
+*/
+
+// 1. ft_finalize_word_node 함수 수정 (인자 변경)
+t_token	*ft_finalize_word_node(char *buffer, int token_type,
+	t_fin_quote quote_status, int seg_count)
+{
+	t_token	*new_node;
+
+	new_node = NULL;
+	if (ft_strlen(buffer) > 0)
+	{
+		// ft_get_token 대신 전달받은 token_type을 사용합니다.
+		new_node = ft_new_token_node(buffer, token_type);
+		if (new_node && seg_count > 0)
+		{
+			if (quote_status == FNL_QUOTE_ALL_SINGLE)
+				new_node->single_quote = 1;
+			else if (quote_status == FNL_QUOTE_ALL_DOUBLE)
+				new_node->double_quote = 1;
+		}
+	}
+	// ft_handle_word에서 메모리를 관리하므로 여기서는 free하지 않습니다.
+	return (new_node);
+}
+
 
 /**
  * @brief Initializes the word building state and aggregator structs.
@@ -91,6 +128,7 @@ static	t_fin_quote	ft_get_finalize_quote_status(
 	return (FNL_QUOTE_NONE);
 }
 
+/*
 t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
 	t_token **list_head)
 {
@@ -113,5 +151,52 @@ t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
 			state.buffer, quote_status, state.seg_count);
 	if (state.buffer)
 		free(state.buffer);
+	return (new_node);
+}
+*/
+
+t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
+	t_token **list_head)
+{
+	t_word_build_state	state;
+	t_word_aggregator	aggregator;
+	t_fin_quote			quote_status;
+	t_token				*new_node;
+	int					token_type;
+	t_token				*last_token;
+
+	if (!ft_init_word_build(&state, &aggregator, list_head))
+		return (NULL);
+	while (*i < input_len && !is_whitespace(str[*i])
+		&& !is_operator_char(str[*i]))
+	{
+		if (!ft_append_next_segment(str, i, input_len, &aggregator))
+		{
+			free(state.buffer);
+			return (NULL);
+		}
+	}
+	
+	// --- 핵심 수정: 이곳에서 컨텍스트를 가지고 토큰 타입을 결정합니다. ---
+	last_token = ft_get_last_token(*list_head);
+	// is_redir_operator는 inline_functions1.h에 정의된 함수입니다.
+	if (ft_is_builtin(state.buffer) && (!last_token
+			|| !is_redir_operator(last_token->token)))
+		token_type = BUILTIN; // 빌트인은 CMD 대신 BUILTIN 타입을 사용합니다.
+	else
+		token_type = WORD;
+	// --- 로직 수정 끝 ---
+
+	quote_status = ft_get_finalize_quote_status(
+			state.all_s_q, state.has_unq, state.all_d_q);
+	
+	new_node = ft_finalize_word_node(
+			state.buffer, token_type, quote_status, state.seg_count);
+			
+	// 버그 수정: 토큰이 성공적으로 생성된 경우에만 버퍼의 소유권이 넘어가므로,
+	// 생성되지 않았을 때만 버퍼를 해제합니다.
+	if (!new_node && state.buffer)
+		free(state.buffer);
+		
 	return (new_node);
 }

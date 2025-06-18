@@ -27,7 +27,7 @@ int		ft_is_variable(char *str);
 char	*ft_parse_env_variable(char *env_var);
 int		ft_count_valide_variable(char **var, char **envp, int *err);
 int		ft_check_variable_export(char *var, char **envp);
-int		ft_print_variable_int_str(char *str);
+int		ft_print_variable_int_str(char *str, int l_exit_status);
 int		ft_print_variable(char **envp, char *str, int *idx);
 
 // environnement tools

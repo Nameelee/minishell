@@ -45,7 +45,7 @@ char	*ft_process_split(char *str)
 	return (ft_strdup(new));
 }
 
-void	ft_exit(char **split)
+void	ft_exit(char **split, int exit_status)
 {
 	if (!split)
 		exit(0);
@@ -70,5 +70,5 @@ void	ft_exit(char **split)
 		}
 		exit(atoi(split[1]));
 	}
-	exit(g_exit_status);
+	exit(exit_status);
 }

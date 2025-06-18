@@ -40,7 +40,7 @@ static int	count_potential_args(t_token *node)
  * @return Returns the populated argv array, or NULL on error.
  */
 static char	**run_population_loop(char **argv, int max_count, \
-				t_token *start_node, char ***envp_ptr)
+				t_token *start_node, char ***envp_ptr, int l_exit)
 {
 	int		actual_i;
 	t_token	*curr;
@@ -51,7 +51,7 @@ static char	**run_population_loop(char **argv, int max_count, \
 	i = -1;
 	while (++i < max_count)
 	{
-		if (!process_single_token(curr, argv, &actual_i, envp_ptr))
+		if (!process_single_token(curr, argv, &actual_i, envp_ptr, l_exit))
 			return (free_and_nullify_argv(argv, actual_i));
 		curr = curr->right;
 	}
@@ -65,7 +65,7 @@ static char	**run_population_loop(char **argv, int max_count, \
  * @brief Sets up and builds an argv array from a token list.
  * This function handles the initial counting and allocation.
  */
-char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr)
+char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr, int l_exit)
 {
 	int		max_count;
 	char	**argv;
@@ -78,7 +78,7 @@ char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr)
 	argv = (char **)malloc(sizeof(char *) * (max_count + 1));
 	if (!argv)
 		return (perror("minishell: malloc failed"), NULL);
-	return (run_population_loop(argv, max_count, cmd_node, envp_ptr));
+	return (run_population_loop(argv, max_count, cmd_node, envp_ptr, l_exit));
 }
 
 /**
@@ -87,7 +87,7 @@ char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr)
  * @param envp_ptr A pointer to the environment variables.
  * @return The exit status of the executed builtin command.
  */
-static int	dispatch_builtin(char **argv, char ***envp_ptr)
+static int	dispatch_builtin(char **argv, char ***envp_ptr, int exit_status)
 {
 	if (ft_strncmp(argv[0], "echo", 5) == 0)
 		return (ft_echo(argv));
@@ -103,25 +103,32 @@ static int	dispatch_builtin(char **argv, char ***envp_ptr)
 		return (ft_env(argv, envp_ptr));
 	else if (ft_strncmp(argv[0], "exit", 5) == 0)
 	{
-		ft_exit(argv);
-		return (g_exit_status);
+		ft_exit(argv, exit_status);
+		return (exit_status);
 	}
 	fprintf(stderr, "minishell: %s: builtin not recognized\n", argv[0]);
 	return (127);
 }
 
-int	ft_execute_builtin(t_token *node, char ***envp_ptr)
+int	ft_execute_builtin(t_token *node, char ***envp_ptr, int exit_status)
 {
 	char	**argv;
-	int		exit_status;
+	int		current_cmd_status; // 현재 명령어의 상태를 저장할 변수
 
-	argv = build_argv_from_ast(node, envp_ptr);
+	// build_argv_from_ast도 $? 확장을 위해 last_exit_status가 필요할 수 있습니다.
+	argv = build_argv_from_ast(node, envp_ptr, exit_status);
 	if (!argv || !argv[0])
 	{
 		free_argv(argv);
 		return (1);
 	}
-	exit_status = dispatch_builtin(argv, envp_ptr);
+
+	// 2. dispatch_builtin에는 '이전' 상태(last_exit_status)를 전달합니다.
+	//    그리고 그 반환값(현재 명령어의 상태)을 별도의 변수에 저장합니다.
+	current_cmd_status = dispatch_builtin(argv, envp_ptr, exit_status);
+
 	free_argv(argv);
-	return (exit_status);
+	
+	// 3. '현재' 실행된 빌트인의 종료 상태를 반환합니다.
+	return (current_cmd_status);
 }

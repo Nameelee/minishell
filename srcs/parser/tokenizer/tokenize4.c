@@ -10,6 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
 
 /**
  * @brief 현재 인덱스에서 시작하여 닫는 따옴표를 찾을 때까지 인덱스를 전진시킵니다.

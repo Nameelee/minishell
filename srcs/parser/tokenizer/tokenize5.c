@@ -11,6 +11,9 @@
 /* ************************************************************************** */
 
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
+
 /**
  * @brief Checks for two-character operators (e.g., ">>", "<<") 
  * and updates the state.

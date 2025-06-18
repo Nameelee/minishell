@@ -51,13 +51,13 @@ int	ft_is_variable(char *str)
 	return (0);
 }
 
-int	ft_print_variable_int_str(char *str)
+int	ft_print_variable_int_str(char *str, int l_exit_status)
 {
 	char	*code;
 
 	if (str[1] == '?')
 	{
-		code = ft_itoa(g_exit_status);
+		code = ft_itoa(l_exit_status);
 		write(STDOUT_FILENO, code, ft_strlen(code));
 		free(code);
 		return (0);

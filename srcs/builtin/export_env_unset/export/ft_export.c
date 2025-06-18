@@ -56,7 +56,6 @@ int	ft_count_valide_variable(char **var, char **envp, int *err)
 			count++;
 		else
 		{
-			g_exit_status = 1;
 			(*err)++;
 		}
 		i++;
@@ -64,13 +63,12 @@ int	ft_count_valide_variable(char **var, char **envp, int *err)
 	return (count);
 }
 
-static char	**add_variable_ex(char ***env, char **split_args)
+static char	**add_variable_ex(char ***env, char **split_args, int *err)
 {
 	int		valide_variable_len;
 	char	**new_env;
-	int		err;
 
-	valide_variable_len = ft_count_valide_variable(split_args, *env, &err);
+	valide_variable_len = ft_count_valide_variable(split_args, *env, err);
 	if (valide_variable_len)
 	{
 		new_env = ft_add_variable_to_env(*env, split_args);
@@ -81,7 +79,8 @@ static char	**add_variable_ex(char ***env, char **split_args)
 	}
 	else
 	{
-		print_export_message(0);
+		if (*err == 0)
+			print_export_message(0);
 		return (NULL);
 	}
 	return (*env);
@@ -90,14 +89,17 @@ static char	**add_variable_ex(char ***env, char **split_args)
 int	ft_export(char ***env, char **split_args)
 {
 	char	**tmp_env;
+	int		error_occurred;
 
+	error_occurred = 0;
 	if (!env || !*env || !split_args)
 		return (1);
 	if (!split_args[1] || ft_strncmp(split_args[1], "", 1) == 0)
 		return (display_export_env(env));
-	tmp_env = add_variable_ex(env, &split_args[1]);
-	if (!tmp_env)
+	tmp_env = add_variable_ex(env, &split_args[1], &error_occurred);
+	if (tmp_env)
+		*env = tmp_env;
+	if (error_occurred > 0)
 		return (1);
-	*env = tmp_env;
 	return (0);
 }

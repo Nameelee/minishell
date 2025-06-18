@@ -10,6 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
 
 /**
  * @brief 현재 버퍼에 새 문자열 조각(piece)을 결합합니다.

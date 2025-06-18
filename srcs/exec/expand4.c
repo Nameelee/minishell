@@ -12,12 +12,12 @@
 
 #include "exec.h"
 
-static bool	ft_process_expansion_chunk(t_exp_data *data)
+static bool	ft_process_expansion_chunk(t_exp_data *data, int l_exit)
 {
 	if (**data->pos == '$' && !(data->is_double_quoted
 			&& *data->pos > data->input_str && *(*data->pos - 1) == '\\'))
 	{
-		if (!handle_variable_expansion(data->pos, data->buffer, data->envp))
+		if (!handle_variable_expansion(data->pos, data->buffer, data->envp, l_exit))
 			return (false);
 	}
 	else if (data->is_double_quoted && **data->pos == '\\'
@@ -46,11 +46,11 @@ static bool	ft_process_expansion_chunk(t_exp_data *data)
  * @param data 확장 상태와 데이터가 포함된 구조체 포인터입니다.
  * @return 처리가 성공하면 true, 실패하면 false를 반환합니다.
  */
-static bool	perform_expansion_loop(t_exp_data *data)
+static bool	perform_expansion_loop(t_exp_data *data, int l_exit)
 {
 	while (**data->pos)
 	{
-		if (!ft_process_expansion_chunk(data))
+		if (!ft_process_expansion_chunk(data, l_exit))
 			return (false);
 	}
 	return (true);
@@ -73,7 +73,7 @@ static char	*handle_single_quoted(const char *input_str)
  * (This function is now under the 25-line limit)
  */
 char	*expand_all_variables(const char *input_str, char **envp,
-			bool is_single_quoted, bool is_double_quoted)
+			bool is_single_quoted, bool is_double_quoted, int l_exit)
 {
 	t_exp_data	data;
 	char		*buffer;
@@ -90,7 +90,7 @@ char	*expand_all_variables(const char *input_str, char **envp,
 	data.envp = envp;
 	data.is_double_quoted = is_double_quoted;
 	data.input_str = input_str;
-	if (!perform_expansion_loop(&data))
+	if (!perform_expansion_loop(&data, l_exit))
 	{
 		free(buffer);
 		return (NULL);

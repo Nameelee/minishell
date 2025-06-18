@@ -161,14 +161,15 @@ char			*ft_extract_unquoted_segment(const char *str, size_t *i,
 					size_t input_len);
 char			*ft_seg_concaten(char *current_buffer, char *piece_str,
 					t_token **list_head);
-t_token			*ft_finalize_word_node(char *buffer, t_fin_quote quote_status,
-					int seg_count);
+t_token			*ft_finalize_word_node(char *buffer, int token_type,
+					t_fin_quote quote_status, int seg_count);
 t_token			*ft_handle_word(const char *str, size_t *i, size_t input_len,
 					t_token **list_head);
 bool			ft_append_next_segment(const char *str, size_t *idx,
 					size_t input_len, t_word_aggregator *agg);
 bool			is_whitespace(char c);
 bool			is_operator_char(char c);
+int				ft_is_builtin(char *str);
 void			free_token_list(t_token *list);
 void			free_single_token_node_content_and_node(t_token *node);
 t_seg_extract	ft_extract_current_segment_info(const char *str,

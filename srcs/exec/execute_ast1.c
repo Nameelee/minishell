@@ -67,11 +67,11 @@ static void	check_for_directory(char **argv)
 /**
  * @brief Executes a simple external command.
  */
-static void	execute_simple_command(t_token *cmd_node, char ***envp)
+static void	execute_simple_command(t_token *cmd_node, char ***envp, int l_exit)
 {
 	char	**argv;
 
-	argv = build_argv_from_ast(cmd_node, envp);
+	argv = build_argv_from_ast(cmd_node, envp, l_exit);
 	if (!argv)
 		exit(0);
 	check_for_directory(argv);
@@ -108,17 +108,17 @@ static void	handle_unknown_command(t_token *node, char ***envp)
 /**
  * @brief Dispatches a command node to the correct execution function.
  */
-void	dispatch_command_execution(t_token *cmd_node, char ***envp)
+void	dispatch_command_execution(t_token *cmd_node, char ***envp, int l_exit)
 {
 	if (!cmd_node)
 		exit(0);
 	if (cmd_node->token == PIPE)
 		exit(execute_pipe(cmd_node, envp));
 	else if (cmd_node->token == BUILTIN)
-		exit(ft_execute_builtin(cmd_node, envp));
+		exit(ft_execute_builtin(cmd_node, envp, l_exit));
 	else if (cmd_node->token == CMD || cmd_node->token == WORD
 		|| cmd_node->token == VAR)
-		execute_simple_command(cmd_node, envp);
+		execute_simple_command(cmd_node, envp, l_exit);
 	else
 		handle_unknown_command(cmd_node, envp);
 }

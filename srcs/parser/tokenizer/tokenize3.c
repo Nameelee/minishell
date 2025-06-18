@@ -11,6 +11,9 @@
 /* ************************************************************************** */
 
 #include "tokenize.h"
+#include "inline_functions1.h"
+#include "inline_functions2.h"
+
 /**
  * @brief 따옴표로 시작하는 세그먼트를 처리하고 추출 결과를 반환합니다.
  */

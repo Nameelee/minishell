@@ -17,6 +17,9 @@
  */
 void	execute_pipe_left_child(t_token *node, char ***envp, int pipefd[2])
 {
+	int exit_status;
+
+	exit_status = 0;
 	close(pipefd[0]);
 	if (dup2(pipefd[1], STDOUT_FILENO) == -1)
 	{
@@ -25,8 +28,8 @@ void	execute_pipe_left_child(t_token *node, char ***envp, int pipefd[2])
 		exit(1);
 	}
 	close(pipefd[1]);
-	execute_ast(node->left, envp, false);
-	exit(g_exit_status);
+	exit_status = execute_ast(node->left, envp, false, exit_status);
+	exit(exit_status);
 }
 
 /**
@@ -35,6 +38,9 @@ void	execute_pipe_left_child(t_token *node, char ***envp, int pipefd[2])
  */
 void	execute_pipe_right_child(t_token *node, char ***envp, int pipefd[2])
 {
+	int exit_status;
+
+	exit_status = 0;
 	close(pipefd[1]);
 	if (dup2(pipefd[0], STDIN_FILENO) == -1)
 	{
@@ -43,8 +49,8 @@ void	execute_pipe_right_child(t_token *node, char ***envp, int pipefd[2])
 		exit(1);
 	}
 	close(pipefd[0]);
-	execute_ast(node->right, envp, false);
-	exit(g_exit_status);
+	exit_status = execute_ast(node->right, envp, false, exit_status);
+	exit(exit_status);
 }
 
 /**

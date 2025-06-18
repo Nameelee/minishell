@@ -46,10 +46,6 @@
 #define TEST_START printf("\033[0;33m" "Initiating function test: %s\n" "\x1b[0m", __func__);
 #define TEST_SUCCES printf("\033[0;32m" "Function: %s executed successfully.\n" "\x1b[0m", __func__);
 
-
-extern int g_exit_status;
-
-
 char **ft_duplicate_env(char *envp[]);
 void free_duplicated_env(char **dup_envp);
 

@@ -12,7 +12,7 @@
 
 #include "../builtin.h"
 
-void	print_echo(char *str, char **envp)
+void	print_echo(char *str, char **envp, int l_exit)
 {
 	int	i;
 
@@ -27,7 +27,7 @@ void	print_echo(char *str, char **envp)
 		}
 		else if (str[i] == '$' && str[i + 1] == '?')
 		{
-			ft_print_variable_int_str(&str[i++]);
+			ft_print_variable_int_str(&str[i++], l_exit);
 		}
 		else
 			write(STDOUT_FILENO, &str[i], 1);
@@ -35,7 +35,7 @@ void	print_echo(char *str, char **envp)
 	}
 }
 
-int	process_echo(char **split_args, char **envp, int n)
+int	process_echo(char **split_args, char **envp, int n, int l_exit)
 {
 	int	j;
 
@@ -43,7 +43,7 @@ int	process_echo(char **split_args, char **envp, int n)
 	while (split_args[j])
 	{
 		printf("I am here%s", split_args[j]);
-		print_echo(split_args[j], envp);
+		print_echo(split_args[j], envp, l_exit);
 		if (split_args[j + 1])
 			write(STDOUT_FILENO, " ", 1);
 		j++;

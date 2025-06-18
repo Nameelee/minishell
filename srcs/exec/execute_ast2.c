@@ -63,60 +63,61 @@ static t_token	*handle_redirections(t_token *node)
 /**
  * @brief Contains all logic that runs inside a child process.
  */
-void	execute_child_command(t_token *node, char ***envp)
+void	execute_child_command(t_token *node, char ***envp, int l_exit)
 {
 	t_token	*cmd_node;
 
 	cmd_node = handle_redirections(node);
-	dispatch_command_execution(cmd_node, envp);
+	dispatch_command_execution(cmd_node, envp, l_exit);
 }
 
 /**
  * @brief Waits for the main command process and sets the global exit status.
  */
-static void	wait_and_set_final_status(pid_t pid)
+static int	wait_and_get_status(pid_t pid)
 {
 	int	status;
+	int	exit_status;
 
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status))
-		g_exit_status = WEXITSTATUS(status);
+		exit_status = WEXITSTATUS(status);
 	else if (WIFSIGNALED(status))
 	{
-		g_exit_status = 128 + WTERMSIG(status);
+		exit_status = 128 + WTERMSIG(status);
 		if (WTERMSIG(status) == SIGINT)
 			write(STDOUT_FILENO, "\n", 1);
 		else if (WTERMSIG(status) == SIGQUIT)
 			fprintf(stderr, "Quit: %d\n", WTERMSIG(status));
 	}
 	else
-		g_exit_status = 1;
+		exit_status = 1;
+	return (exit_status);
 }
 
 /**
  * @brief Contains all logic that runs in the top-level parent process.
  */
-void	execute_toplevel_command(t_token *node, char ***envp)
+int	execute_toplevel_command(t_token *node, char ***envp, int exit_status)
 {
 	pid_t	pid;
 
 	if (preprocess_heredocs(node) == -1)
 	{
-		g_exit_status = 1;
-		return ;
+		exit_status = 1;
+		return (exit_status);
 	}
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("minishell: fork failed");
-		g_exit_status = 1;
-		return ;
+		return (1);
 	}
 	if (pid == 0)
 	{
-		execute_child_command(node, envp);
+		execute_child_command(node, envp, exit_status);
 		exit(1);
 	}
 	close_all_heredoc_fds_in_tree(node);
-	wait_and_set_final_status(pid);
+	return (wait_and_get_status(pid));
 }

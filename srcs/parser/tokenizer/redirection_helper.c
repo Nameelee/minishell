@@ -115,5 +115,6 @@ int	apply_redir_heredoc(t_redir *redir_item)
 		perror("dup2 STDIN_FILENO (heredoc)");
 		return (-1);
 	}
+	close(heredoc_fd_to_dup);
 	return (0);
 }

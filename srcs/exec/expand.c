@@ -57,7 +57,7 @@ static void	perform_exit_status_replacement(char *dest, const char *src,
 	strcpy(dest, current_pos);
 }
 
-char	*expand_exit_status(const char *original_str)
+char	*expand_exit_status(const char *original_str, int exit_status)
 {
 	char	*status_val_str;
 	char	*expanded_str;
@@ -66,7 +66,7 @@ char	*expand_exit_status(const char *original_str)
 
 	if (!strstr(original_str, "$?"))
 		return (ft_strdup(original_str));
-	status_val_str = ft_itoa(g_exit_status);
+	status_val_str = ft_itoa(exit_status);
 	if (!status_val_str)
 		return (ft_strdup(original_str));
 	q_mark_count = count_occurrences(original_str, "$?");

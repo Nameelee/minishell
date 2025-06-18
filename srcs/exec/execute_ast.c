@@ -12,16 +12,22 @@
 
 #include "exec.h"
 
-void	execute_ast(t_token *node, char ***envp, bool is_top_level)
+int	execute_ast(t_token *node, char ***envp,
+	bool is_top_level, int exit_status)
 {
 	if (!node)
 	{
 		if (is_top_level)
-			g_exit_status = 0;
-		return ;
+			return (0);
+		else
+			exit(0);
 	}
 	if (is_top_level)
-		execute_toplevel_command(node, envp);
+		return (execute_toplevel_command(node, envp, exit_status));
 	else
-		execute_child_command(node, envp);
+	{
+		execute_child_command(node, envp, exit_status);
+		exit(EXIT_FAILURE);
+	}
+	return (1);
 }

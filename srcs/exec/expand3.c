@@ -31,14 +31,14 @@ char	*append_char(char *buffer, char c)
  * @brief Gets the value of a variable ('$' or from the environment).
  * Returns a newly allocated string that must be freed by the caller.
  */
-static char	*get_var_value(const char *var_name, char **envp)
+static char	*get_var_value(const char *var_name, char **envp, int l_exit_status)
 {
 	char	*dollar_var_name;
 	char	*env_entry;
 	char	*eq_ptr;
 
 	if (ft_strncmp(var_name, "?", 2) == 0)
-		return (ft_itoa(g_exit_status));
+		return (ft_itoa(l_exit_status));
 	dollar_var_name = ft_strjoin("$", var_name);
 	if (!dollar_var_name)
 		return (ft_strdup(""));
@@ -62,12 +62,12 @@ static char	*get_var_value(const char *var_name, char **envp)
  * @return Returns true on success, false on memory allocation failure.
  */
 static bool	ft_expand_and_append_value(char **buffer, const char *var_name,
-	char **envp)
+	char **envp, int l_exit_status)
 {
 	char	*value_str;
 	char	*temp_buffer;
 
-	value_str = get_var_value(var_name, envp);
+	value_str = get_var_value(var_name, envp, l_exit_status);
 	if (!value_str)
 		return (false);
 	temp_buffer = ft_strjoin(*buffer, value_str);
@@ -83,7 +83,7 @@ static bool	ft_expand_and_append_value(char **buffer, const char *var_name,
  * @brief Handles a '$' character, dispatching to expand a variable or
  * treat it as a literal. Advances the position pointer.
  */
-bool	handle_variable_expansion(const char **pos, char **buffer, char **envp)
+bool	handle_variable_expansion(const char **pos, char **buffer, char **envp, int l_exit)
 {
 	char	*var_name;
 	size_t	var_len_in_input;
@@ -91,7 +91,7 @@ bool	handle_variable_expansion(const char **pos, char **buffer, char **envp)
 	var_name = get_var_name(*pos + 1, &var_len_in_input);
 	if (var_name)
 	{
-		if (!ft_expand_and_append_value(buffer, var_name, envp))
+		if (!ft_expand_and_append_value(buffer, var_name, envp, l_exit))
 		{
 			free(var_name);
 			return (false);

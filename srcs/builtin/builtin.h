@@ -27,7 +27,7 @@
 
 int		ft_pwd(char **string);
 int		ft_cd(char **path);
-void	ft_exit(char **env);
+void	ft_exit(char **split, int exit_status);
 int		ft_env(char **processed_argv, char ***envp);
 int		ft_unset(char **var, char ***envp);
 int		ft_export(char ***env, char **processed_argv);
