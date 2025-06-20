@@ -39,7 +39,7 @@ char	*ft_get_home_path(char *path, int cd)
 	if (cd == 0)
 		total_path = ft_strjoin(env, &path[1]);
 	else
-		total_path = env;
+		total_path = ft_strdup(env);
 	if (!total_path)
 		return (NULL);
 	return (total_path);
