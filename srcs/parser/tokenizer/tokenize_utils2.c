@@ -46,3 +46,20 @@ void	free_token_list(t_token *list_head)
 		current = next;
 	}
 }
+
+void	free_ast(t_token *node)
+{
+	if (node == NULL)
+	{
+		return;
+	}
+	if (node->left)
+	{
+		free_ast(node->left);
+	}
+	if (node->right)
+	{
+		free_ast(node->right);
+	}
+	free_single_token_node_content_and_node(node);
+}

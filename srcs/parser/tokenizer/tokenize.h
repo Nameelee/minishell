@@ -173,6 +173,7 @@ bool			is_operator_char(char c);
 int				ft_is_builtin(char *str);
 void			free_token_list(t_token *list);
 void			free_single_token_node_content_and_node(t_token *node);
+void			free_ast(t_token *node);
 t_seg_extract	ft_extract_current_segment_info(const char *str,
 					size_t *idx, size_t input_len, t_word_aggregator *agg);
 t_unquot_pdata	ft_handle_unquoted_piece(const char *str_input,

@@ -62,6 +62,15 @@ int	ft_read_line(char *prompt, char **envp)
 		if (ast_root)
 		{
 			exit_status = execute_ast(ast_root, &envp, true, exit_status);
+			if (exit_status >= 256)
+			{
+				int final_code = exit_status - 256;
+				free_ast(ast_root);
+				free(line);
+				// main으로 최종 종료 코드를 반환하여 정상 종료
+				return (final_code);
+			}
+			free_ast(ast_root); // 각 명령어 실행 후 AST 메모리 해제
 		}
 		else
 		{
@@ -77,10 +86,8 @@ int	ft_read_line(char *prompt, char **envp)
 
 int	ft_start_minishell(char *str, char **envp)
 {
-	int	read;
+	int	exit_code;
 
-	read = ft_read_line(str, envp);
-	if (read == 1)
-		return (1);
-	return (0);
+	exit_code = ft_read_line(str, envp);
+	return (exit_code);
 }

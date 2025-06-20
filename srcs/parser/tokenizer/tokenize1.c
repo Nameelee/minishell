@@ -192,11 +192,7 @@ t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
 	
 	new_node = ft_finalize_word_node(
 			state.buffer, token_type, quote_status, state.seg_count);
-			
-	// 버그 수정: 토큰이 성공적으로 생성된 경우에만 버퍼의 소유권이 넘어가므로,
-	// 생성되지 않았을 때만 버퍼를 해제합니다.
-	if (!new_node && state.buffer)
+	if (state.buffer)
 		free(state.buffer);
-		
 	return (new_node);
 }

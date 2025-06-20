@@ -12,6 +12,21 @@
 
 #include "exec.h"
 
+static int is_numeric(const char *str)
+{
+    if (!str || *str == '\0')
+        return (0);
+    if (*str == '+' || *str == '-')
+        str++;
+    while (*str)
+    {
+        if (!ft_isdigit((unsigned char)*str))
+            return (0);
+        str++;
+    }
+    return (1);
+}
+
 /**
  * @brief Counts the number of tokens that could become arguments.
  */
@@ -87,7 +102,7 @@ char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr, int l_exit)
  * @param envp_ptr A pointer to the environment variables.
  * @return The exit status of the executed builtin command.
  */
-static int	dispatch_builtin(char **argv, char ***envp_ptr, int exit_status)
+static int	dispatch_builtin(char **argv, char ***envp_ptr)
 {
 	if (ft_strncmp(argv[0], "echo", 5) == 0)
 		return (ft_echo(argv));
@@ -101,11 +116,6 @@ static int	dispatch_builtin(char **argv, char ***envp_ptr, int exit_status)
 		return (ft_unset(argv, envp_ptr));
 	else if (ft_strncmp(argv[0], "env", 4) == 0)
 		return (ft_env(argv, envp_ptr));
-	else if (ft_strncmp(argv[0], "exit", 5) == 0)
-	{
-		ft_exit(argv, exit_status);
-		return (exit_status);
-	}
 	fprintf(stderr, "minishell: %s: builtin not recognized\n", argv[0]);
 	return (127);
 }
@@ -123,12 +133,31 @@ int	ft_execute_builtin(t_token *node, char ***envp_ptr, int exit_status)
 		return (1);
 	}
 
-	// 2. dispatch_builtin에는 '이전' 상태(last_exit_status)를 전달합니다.
-	//    그리고 그 반환값(현재 명령어의 상태)을 별도의 변수에 저장합니다.
-	current_cmd_status = dispatch_builtin(argv, envp_ptr, exit_status);
+		if (ft_strncmp(argv[0], "exit", 5) == 0)
+	{
+		int final_exit_code = exit_status;
+		if (argv[1])
+		{
+			if (!is_numeric(argv[1]))
+			{
+				fprintf(stderr, "minishell: exit: %s: numeric argument required\n", argv[1]);
+				final_exit_code = 2;
+			}
+			else if (argv[2])
+			{
+				fprintf(stderr, "minishell: exit: too many arguments\n");
+				free_argv(argv);
+				return (1); // 셸을 종료하지 않고 상태 코드 1만 반환
+			}
+			else
+				final_exit_code = ft_atoi(argv[1]);
+		}
+		free_argv(argv);
+		// 주 반복문에 종료 신호를 보냅니다. 256을 더해 일반 종료 코드와 구별합니다.
+		return (256 + (final_exit_code & 0xFF));
+	}
 
+	current_cmd_status = dispatch_builtin(argv, envp_ptr);
 	free_argv(argv);
-	
-	// 3. '현재' 실행된 빌트인의 종료 상태를 반환합니다.
 	return (current_cmd_status);
 }
