@@ -95,29 +95,34 @@ static int	wait_and_get_status(pid_t pid)
 	return (exit_status);
 }
 
-/**
- * @brief Contains all logic that runs in the top-level parent process.
- */
 int	execute_toplevel_command(t_token *node, char ***envp, int exit_status)
 {
 	pid_t	pid;
+	struct sigaction sa_old;
 
 	if (preprocess_heredocs(node) == -1)
-	{
-		exit_status = 1;
-		return (exit_status);
-	}
+		return (1);
+
+	sigaction(SIGINT, NULL, &sa_old);
+	signal(SIGINT, SIG_IGN);
+
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("minishell: fork failed");
+		sigaction(SIGINT, &sa_old, NULL);
 		return (1);
 	}
 	if (pid == 0)
 	{
+		signal(SIGINT, SIG_DFL);
 		execute_child_command(node, envp, exit_status);
 		exit(1);
 	}
+
+	exit_status = wait_and_get_status(pid);
+	sigaction(SIGINT, &sa_old, NULL);
+
 	close_all_heredoc_fds_in_tree(node);
-	return (wait_and_get_status(pid));
+	return (exit_status);
 }
