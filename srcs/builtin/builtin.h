@@ -26,7 +26,7 @@
 # include "../../include/main.h" 
 
 int		ft_pwd(char **string);
-int		ft_cd(char **path);
+int		ft_cd(char **path, char ***envp);
 void	ft_exit(char **split, int exit_status);
 int		ft_env(char **processed_argv, char ***envp);
 int		ft_unset(char **var, char ***envp);

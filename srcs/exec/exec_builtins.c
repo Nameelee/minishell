@@ -107,7 +107,7 @@ static int	dispatch_builtin(char **argv, char ***envp_ptr)
 	if (ft_strncmp(argv[0], "echo", 5) == 0)
 		return (ft_echo(argv));
 	else if (ft_strncmp(argv[0], "cd", 3) == 0)
-		return (ft_cd(argv));
+		return (ft_cd(argv, envp_ptr));
 	else if (ft_strncmp(argv[0], "pwd", 4) == 0)
 		return (ft_pwd(argv));
 	else if (ft_strncmp(argv[0], "export", 7) == 0)
