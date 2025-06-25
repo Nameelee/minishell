@@ -88,7 +88,10 @@ static int	wait_and_get_status(pid_t pid)
 		if (WTERMSIG(status) == SIGINT)
 			write(STDOUT_FILENO, "\n", 1);
 		else if (WTERMSIG(status) == SIGQUIT)
+		{
 			fprintf(stderr, "Quit: %d\n", WTERMSIG(status));
+			//write(STDOUT_FILENO, "^\\", sizeof("^\\") - 1);
+		}
 	}
 	else
 		exit_status = 1;
@@ -98,30 +101,36 @@ static int	wait_and_get_status(pid_t pid)
 int	execute_toplevel_command(t_token *node, char ***envp, int exit_status)
 {
 	pid_t	pid;
-	struct sigaction sa_old;
+	struct sigaction sa_int_old;
+	struct sigaction sa_quit_old;
 
 	if (preprocess_heredocs(node) == -1)
 		return (1);
 
-	sigaction(SIGINT, NULL, &sa_old);
+	sigaction(SIGINT, NULL, &sa_int_old);
+	sigaction(SIGQUIT, NULL, &sa_quit_old);
 	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
 
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("minishell: fork failed");
-		sigaction(SIGINT, &sa_old, NULL);
+		sigaction(SIGINT, &sa_int_old, NULL);
+		sigaction(SIGQUIT, &sa_quit_old, NULL);
 		return (1);
 	}
 	if (pid == 0)
 	{
 		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
 		execute_child_command(node, envp, exit_status);
 		exit(1);
 	}
 
 	exit_status = wait_and_get_status(pid);
-	sigaction(SIGINT, &sa_old, NULL);
+	sigaction(SIGINT, &sa_int_old, NULL);
+	sigaction(SIGQUIT, &sa_quit_old, NULL);
 
 	close_all_heredoc_fds_in_tree(node);
 	return (exit_status);
