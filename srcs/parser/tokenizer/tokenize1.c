@@ -14,7 +14,7 @@
 #include "inline_functions1.h"
 #include "inline_functions2.h"
 
-t_token	*ft_get_last_token(t_token *list)//NEW
+t_token	*ft_get_last_token(t_token *list)
 {
 	if (!list)
 		return (NULL);
@@ -64,7 +64,6 @@ t_token	*ft_finalize_word_node(char *buffer, int token_type,
 	new_node = NULL;
 	if (ft_strlen(buffer) > 0)
 	{
-		// ft_get_token 대신 전달받은 token_type을 사용합니다.
 		new_node = ft_new_token_node(buffer, token_type);
 		if (new_node && seg_count > 0)
 		{
@@ -74,10 +73,8 @@ t_token	*ft_finalize_word_node(char *buffer, int token_type,
 				new_node->double_quote = 1;
 		}
 	}
-	// ft_handle_word에서 메모리를 관리하므로 여기서는 free하지 않습니다.
 	return (new_node);
 }
-
 
 /**
  * @brief Initializes the word building state and aggregator structs.
@@ -176,20 +173,14 @@ t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
 			return (NULL);
 		}
 	}
-	
-	// --- 핵심 수정: 이곳에서 컨텍스트를 가지고 토큰 타입을 결정합니다. ---
 	last_token = ft_get_last_token(*list_head);
-	// is_redir_operator는 inline_functions1.h에 정의된 함수입니다.
 	if (ft_is_builtin(state.buffer) && (!last_token
 			|| !is_redir_operator(last_token->token)))
-		token_type = BUILTIN; // 빌트인은 CMD 대신 BUILTIN 타입을 사용합니다.
+		token_type = BUILTIN;
 	else
 		token_type = WORD;
-	// --- 로직 수정 끝 ---
-
 	quote_status = ft_get_finalize_quote_status(
 			state.all_s_q, state.has_unq, state.all_d_q);
-	
 	new_node = ft_finalize_word_node(
 			state.buffer, token_type, quote_status, state.seg_count);
 	if (state.buffer)

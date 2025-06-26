@@ -50,7 +50,6 @@ static int	is_valid_identifier(char *var)
 	int	i;
 
 	i = 0;
-	// 변수 이름은 알파벳이나 밑줄(_)로 시작해야 합니다.
 	if (!var || (!ft_isalpha(var[0]) && var[0] != '_'))
 	{
 		ft_putstr_fd("minishell: unset: `", STDERR_FILENO);
@@ -58,7 +57,6 @@ static int	is_valid_identifier(char *var)
 		ft_putstr_fd("': not a valid identifier\n", STDERR_FILENO);
 		return (0);
 	}
-	// 그 뒤에는 알파벳, 숫자, 밑줄(_)만 올 수 있습니다.
 	while (var[i])
 	{
 		if (!ft_isalnum(var[i]) && var[i] != '_')
@@ -120,7 +118,6 @@ char	**ft_delete_variable(char **old_env, char **del_var, int valide_var)
 	return (new_env);
 }
 
-// 환경변수 배열에서 특정 변수의 인덱스를 찾는 함수
 static int	find_var_index(char **envp, const char *var_to_find)
 {
 	int		i;
@@ -133,30 +130,27 @@ static int	find_var_index(char **envp, const char *var_to_find)
 		if (var_name && ft_strncmp(var_name, var_to_find, ft_strlen(var_to_find) + 1) == 0)
 		{
 			free(var_name);
-			return (i); // 인덱스를 찾으면 반환
+			return (i);
 		}
 		free(var_name);
 		i++;
 	}
-	return (-1); // 찾지 못하면 -1 반환
+	return (-1);
 }
 
-// 특정 인덱스의 환경변수를 제거하는 함수
 static void	remove_var_at_index(char ***envp, int index_to_remove)
 {
 	int	i;
 
-	free((*envp)[index_to_remove]); // 해당 문자열 메모리 해제
+	free((*envp)[index_to_remove]);
 	i = index_to_remove;
 	while ((*envp)[i])
 	{
-		// 포인터들을 한 칸씩 앞으로 당겨서 덮어씁니다.
 		(*envp)[i] = (*envp)[i + 1];
 		i++;
 	}
 }
 
-// 변수 4개 규칙을 만족하는 새로운 ft_unset 함수
 int	ft_unset(char **args, char ***envp)
 {
 	int	i;

@@ -47,15 +47,16 @@ int	ft_read_line(char *prompt, char **envp)
 {
 	char	*line;
 	t_token	*ast_root;
-	int		exit_status; // 지역 변수 선언
+	int		exit_status;
+	int		final_code;
 
-	exit_status = 0; // 초기화
+	exit_status = 0;
 	while (1)
 	{
 		line = readline(prompt);
 		if (!line)
 		{
-			printf("exit\n"); // Ctrl+D 처리
+			printf("exit\n");
 			return (exit_status);
 		}
 		ast_root = process_line(line);
@@ -64,13 +65,12 @@ int	ft_read_line(char *prompt, char **envp)
 			exit_status = execute_ast(ast_root, &envp, true, exit_status);
 			if (exit_status >= 256)
 			{
-				int final_code = exit_status - 256;
+				final_code = exit_status - 256;
 				free_ast(ast_root);
 				free(line);
-				// main으로 최종 종료 코드를 반환하여 정상 종료
 				return (final_code);
 			}
-			free_ast(ast_root); // 각 명령어 실행 후 AST 메모리 해제
+			free_ast(ast_root);
 		}
 		else
 		{

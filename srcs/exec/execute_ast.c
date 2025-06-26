@@ -13,7 +13,8 @@
 #include "exec.h"
 #include "../parser/tokenizer/inline_functions1.h"
 
-static int	execute_parent_builtin(t_token *node, char ***envp, int exit_status);
+static int	execute_parent_builtin(t_token *node,
+				char ***envp, int exit_status);
 
 /**
  * @brief Checks if a token type is a redirection operator.
@@ -60,9 +61,10 @@ static bool	is_parent_builtin(t_token *cmd_node)
 }
 
 /**
- * @brief Executes a builtin command in the parent process, handling IO redirection.
+ * @brief Executes a builtin command in the parent, IO redirection.
  */
-static int	execute_parent_builtin(t_token *node, char ***envp, int exit_status)
+static int	execute_parent_builtin(t_token *node,
+				char ***envp, int exit_status)
 {
 	int		saved_stdin;
 	int		saved_stdout;

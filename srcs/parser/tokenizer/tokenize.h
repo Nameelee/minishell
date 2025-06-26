@@ -29,6 +29,7 @@
 # include <errno.h> 
 # include <string.h> 
 # include <fcntl.h> 
+# include "../../../include/main.h" 
 
 # define WORD 0
 # define CMD 1
@@ -138,8 +139,6 @@ typedef enum e_tokenize_status {
 	TOKENIZE_SUCCESS_BREAK,
 	TOKENIZE_ERROR
 }	t_tokenize_status;
-
-# include "../../../include/main.h" 
 
 t_token			*ft_tokenize(char *str);
 t_token			*ft_create_ast(t_token *token_list);

@@ -12,7 +12,6 @@
 
 #include "../../builtin.h"
 
-
 int	ft_check_variable_export(char *var, char **envp)
 {
 	int		i;
@@ -41,7 +40,6 @@ int	ft_check_variable_export(char *var, char **envp)
 	}
 	return (1);
 }
-
 
 int	ft_count_valide_variable(char **var, char **envp, int *err)
 {

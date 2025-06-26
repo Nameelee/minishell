@@ -51,7 +51,7 @@ void	free_ast(t_token *node)
 {
 	if (node == NULL)
 	{
-		return;
+		return ;
 	}
 	if (node->left)
 	{

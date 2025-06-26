@@ -12,19 +12,19 @@
 
 #include "exec.h"
 
-static int is_numeric(const char *str)
+static int	is_numeric(const char *str)
 {
-    if (!str || *str == '\0')
-        return (0);
-    if (*str == '+' || *str == '-')
-        str++;
-    while (*str)
-    {
-        if (!ft_isdigit((unsigned char)*str))
-            return (0);
-        str++;
-    }
-    return (1);
+	if (!str || *str == '\0')
+		return (0);
+	if (*str == '+' || *str == '-')
+		str++;
+	while (*str)
+	{
+		if (!ft_isdigit((unsigned char)*str))
+			return (0);
+		str++;
+	}
+	return (1);
 }
 
 /**
@@ -123,37 +123,35 @@ static int	dispatch_builtin(char **argv, char ***envp_ptr)
 int	ft_execute_builtin(t_token *node, char ***envp_ptr, int exit_status)
 {
 	char	**argv;
-	int		current_cmd_status; // 현재 명령어의 상태를 저장할 변수
+	int		current_cmd_status;
+	int		final_exit_code;
 
-	// build_argv_from_ast도 $? 확장을 위해 last_exit_status가 필요할 수 있습니다.
 	argv = build_argv_from_ast(node, envp_ptr, exit_status);
 	if (!argv || !argv[0])
 	{
 		free_argv(argv);
 		return (1);
 	}
-
-		if (ft_strncmp(argv[0], "exit", 5) == 0)
+	if (ft_strncmp(argv[0], "exit", 5) == 0)
 	{
-		int final_exit_code = exit_status;
+		final_exit_code = exit_status;
 		if (argv[1])
 		{
 			if (!is_numeric(argv[1]))
 			{
-				fprintf(stderr, "minishell: exit: %s: numeric argument required\n", argv[1]);
+				fprintf(stderr, "minishell: exit: %s: numeric argumentrequired\n", argv[1]);
 				final_exit_code = 2;
 			}
 			else if (argv[2])
 			{
 				fprintf(stderr, "minishell: exit: too many arguments\n");
 				free_argv(argv);
-				return (1); // 셸을 종료하지 않고 상태 코드 1만 반환
+				return (1);
 			}
 			else
 				final_exit_code = ft_atoi(argv[1]);
 		}
 		free_argv(argv);
-		// 주 반복문에 종료 신호를 보냅니다. 256을 더해 일반 종료 코드와 구별합니다.
 		return (256 + (final_exit_code & 0xFF));
 	}
 

@@ -76,7 +76,7 @@ bool	process_single_token(t_token *curr, char **argv, \
 		return (false);
 	}
 	expanded_str = expand_all_variables(curr->string, *envp_ptr, \
-										curr->single_quote, curr->double_quote, l_exit);
+						curr->single_quote, curr->double_quote, l_exit);
 	if (!expanded_str)
 		return (perror("minishell: argument expansion failed"), false);
 	if (expanded_str[0] == '\0' && curr->double_quote == 0)

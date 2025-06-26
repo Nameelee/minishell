@@ -83,7 +83,8 @@ static bool	ft_expand_and_append_value(char **buffer, const char *var_name,
  * @brief Handles a '$' character, dispatching to expand a variable or
  * treat it as a literal. Advances the position pointer.
  */
-bool	handle_variable_expansion(const char **pos, char **buffer, char **envp, int l_exit)
+bool	handle_variable_expansion(const char **pos,
+			char **buffer, char **envp, int l_exit)
 {
 	char	*var_name;
 	size_t	var_len_in_input;
