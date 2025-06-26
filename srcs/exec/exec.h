@@ -27,7 +27,11 @@
 # include "../parser/tokenizer/tokenize.h"
 # include "../builtin/builtin.h"
 
-typedef struct s_token	t_token;
+typedef struct s_token			t_token;
+typedef struct s_quote_status	t_quote_status;
+typedef struct s_exec_context	t_exec_context;
+typedef struct s_redir			t_redir;
+
 // typedef struct s_exp_context
 // {
 // 	char		**envp;
