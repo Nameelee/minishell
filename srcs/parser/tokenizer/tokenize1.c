@@ -23,39 +23,6 @@ t_token	*ft_get_last_token(t_token *list)
 	return (list);
 }
 
-/**
- * @brief 최종 단어 버퍼로부터 토큰 노드를 생성하고 따옴표 플래그를 설정합니다.
- *
- * @param buffer 최종 단어 문자열 버퍼
- * @param all_single 모든 세그먼트가 단일 따옴표였는지 여부
- * @param all_double 모든 세그먼트가 이중 따옴표였는지 여부
- * @param has_unquoted 따옴표 없는 세그먼트가 있었는지 여부
- * @param seg_count 총 세그먼트 수
- * @return 생성된 토큰 노드, 내용이 없거나 실패 시 NULL
- */
-/*
-t_token	*ft_finalize_word_node(char *buffer, t_fin_quote quote_status,
-	int seg_count)
-{
-	t_token	*new_node;
-
-	new_node = NULL;
-	if (ft_strlen(buffer) > 0)
-	{
-		new_node = ft_new_token_node(buffer, ft_get_token(buffer));
-		if (new_node && seg_count > 0)
-		{
-			if (quote_status == FNL_QUOTE_ALL_SINGLE)
-				new_node->single_quote = 1;
-			else if (quote_status == FNL_QUOTE_ALL_DOUBLE)
-				new_node->double_quote = 1;
-		}
-	}
-	return (new_node);
-}
-*/
-
-// 1. ft_finalize_word_node 함수 수정 (인자 변경)
 t_token	*ft_finalize_word_node(char *buffer, int token_type,
 	t_fin_quote quote_status, int seg_count)
 {
@@ -125,65 +92,64 @@ static	t_fin_quote	ft_get_finalize_quote_status(
 	return (FNL_QUOTE_NONE);
 }
 
-/*
-t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
-	t_token **list_head)
+/**
+ * @brief Iterates through the input string, appending segments to build a
+ * single word token until a whitespace or operator is found.
+ * @return true on success, false on failure.
+ */
+static bool	build_word_from_segments(const char *str, size_t *i,
+	size_t input_len, t_word_aggregator *aggregator)
 {
-	t_word_build_state		state;
-	t_word_aggregator		aggregator;
-	t_fin_quote				quote_status;
-	t_token					*new_node;
-
-	if (!ft_init_word_build(&state, &aggregator, list_head))
-		return (NULL);
 	while (*i < input_len && !is_whitespace(str[*i])
 		&& !is_operator_char(str[*i]))
 	{
-		if (!ft_append_next_segment(str, i, input_len, &aggregator))
-			return (NULL);
+		if (!ft_append_next_segment(str, i, input_len, aggregator))
+			return (false);
 	}
-	quote_status = ft_get_finalize_quote_status(
-			state.all_s_q, state.has_unq, state.all_d_q);
-	new_node = ft_finalize_word_node(
-			state.buffer, quote_status, state.seg_count);
-	if (state.buffer)
-		free(state.buffer);
-	return (new_node);
+	return (true);
 }
-*/
 
+/**
+ * @brief Determines if the constructed word is a BUILTIN or a standard WORD
+ * based on its content and the preceding token.
+ * @return The determined token type (BUILTIN or WORD).
+ */
+static int	determine_word_token_type(char *buffer, t_token **list_head)
+{
+	t_token	*last_token;
+
+	last_token = ft_get_last_token(*list_head);
+	if (ft_is_builtin(buffer) && (!last_token
+			|| !is_redir_operator(last_token->token)))
+		return (BUILTIN);
+	return (WORD);
+}
+
+/**
+ * @brief Handles the creation of a word token by initializing state, building
+ * the word from segments, and finalizing the new token node.
+ * @return A pointer to the newly created token, or NULL on failure.
+ */
 t_token	*ft_handle_word(const char *str, size_t *i, size_t input_len,
 	t_token **list_head)
 {
 	t_word_build_state	state;
 	t_word_aggregator	aggregator;
-	t_fin_quote			quote_status;
 	t_token				*new_node;
-	int					token_type;
-	t_token				*last_token;
+	t_fin_quote			quote_status;
 
 	if (!ft_init_word_build(&state, &aggregator, list_head))
 		return (NULL);
-	while (*i < input_len && !is_whitespace(str[*i])
-		&& !is_operator_char(str[*i]))
+	if (!build_word_from_segments(str, i, input_len, &aggregator))
 	{
-		if (!ft_append_next_segment(str, i, input_len, &aggregator))
-		{
-			free(state.buffer);
-			return (NULL);
-		}
-	}
-	last_token = ft_get_last_token(*list_head);
-	if (ft_is_builtin(state.buffer) && (!last_token
-			|| !is_redir_operator(last_token->token)))
-		token_type = BUILTIN;
-	else
-		token_type = WORD;
-	quote_status = ft_get_finalize_quote_status(
-			state.all_s_q, state.has_unq, state.all_d_q);
-	new_node = ft_finalize_word_node(
-			state.buffer, token_type, quote_status, state.seg_count);
-	if (state.buffer)
 		free(state.buffer);
+		return (NULL);
+	}
+	quote_status = ft_get_finalize_quote_status(state.all_s_q, state.has_unq,
+			state.all_d_q);
+	new_node = ft_finalize_word_node(state.buffer,
+			determine_word_token_type(state.buffer, list_head),
+			quote_status, state.seg_count);
+	free(state.buffer);
 	return (new_node);
 }

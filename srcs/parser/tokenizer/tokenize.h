@@ -108,7 +108,7 @@ typedef struct s_quoted_piece_data {
 	bool	op_success;
 }	t_quoted_pdata;
 
-typedef struct	s_quote_status {
+typedef struct s_quote_status {
 	bool	is_single;
 	bool	is_double;
 }	t_quote_status;

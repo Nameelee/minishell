@@ -17,7 +17,8 @@ static bool	ft_process_expansion_chunk(t_exp_data *data, int l_exit)
 	if (**data->pos == '$' && !(data->is_double_quoted
 			&& *data->pos > data->input_str && *(*data->pos - 1) == '\\'))
 	{
-		if (!handle_variable_expansion(data->pos, data->buffer, data->envp, l_exit))
+		if (!handle_variable_expansion(data->pos,
+				data->buffer, data->envp, l_exit))
 			return (false);
 	}
 	else if (data->is_double_quoted && **data->pos == '\\'
@@ -68,28 +69,28 @@ static char	*handle_single_quoted(const char *input_str)
 	return (ft_strdup(""));
 }
 
-char    *expand_all_variables(const char *input_str, t_quote_status quotes,
-            t_exec_context *ctx)
+char	*expand_all_variables(const char *input_str, t_quote_status quotes,
+			t_exec_context *ctx)
 {
-    t_exp_data  data;
-    char        *buffer;
-    const char  *pos;
+	t_exp_data	data;
+	char		*buffer;
+	const char	*pos;
 
-    if (quotes.is_single)
-        return (handle_single_quoted(input_str));
-    buffer = ft_strdup("");
-    if (!buffer)
-        return (NULL);
-    pos = input_str;
-    data.pos = &pos;
-    data.buffer = &buffer;
-    data.envp = *ctx->envp_ptr;
-    data.is_double_quoted = quotes.is_double;
-    data.input_str = input_str;
-    if (!perform_expansion_loop(&data, ctx->l_exit))
-    {
-        free(buffer);
-        return (NULL);
-    }
-    return (buffer);
+	if (quotes.is_single)
+		return (handle_single_quoted(input_str));
+	buffer = ft_strdup("");
+	if (!buffer)
+		return (NULL);
+	pos = input_str;
+	data.pos = &pos;
+	data.buffer = &buffer;
+	data.envp = *ctx->envp_ptr;
+	data.is_double_quoted = quotes.is_double;
+	data.input_str = input_str;
+	if (!perform_expansion_loop(&data, ctx->l_exit))
+	{
+		free(buffer);
+		return (NULL);
+	}
+	return (buffer);
 }

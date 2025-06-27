@@ -62,9 +62,11 @@ static void	update_pwd_vars(const char *old_pwd, char ***envp)
 */
 static char	*resolve_path(const char *arg)
 {
+	const char	*home;
+	
 	if (arg == NULL)
 	{
-		const char *home = getenv("HOME");
+		home = getenv("HOME");
 		if (home == NULL)
 		{
 			ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO);
