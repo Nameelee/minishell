@@ -39,6 +39,11 @@ typedef struct s_redir			t_redir;
 // 	bool		is_double_quoted;
 // }	t_exp_context;
 
+typedef struct s_exec_context {
+	char	***envp_ptr;
+	int		l_exit;
+}	t_exec_context;
+
 typedef struct s_exp_data
 {
 	const char	**pos;
@@ -53,13 +58,13 @@ int		ft_execute_builtin(t_token *node, char ***envp_ptr, int exit_status);
 int		preprocess_heredocs(t_token *node);
 void	close_all_heredoc_fds_in_tree(t_token *node);
 int		read_heredoc_to_pipe(const char *delimiter);
-char	*expand_all_variables(const char *input_str, char **envp, bool s_quot,
-			bool is_double_quoted, int l_exit);
+char    *expand_all_variables(const char *input_str, t_quote_status quotes,
+            t_exec_context *ctx);
 int		is_expendable_variable(char *var, char **envp);
 char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr, int l_exit);
 char	**free_and_nullify_argv(char **argv, int count);
-bool	process_single_token(t_token *curr, char **argv, \
-				int *actual_i_ptr, char ***envp_ptr, int l_exit);
+bool    process_single_token(t_token *curr, char **argv,
+            int *actual_i_ptr, t_exec_context *ctx);
 void	dispatch_command_execution(t_token *cmd_node, char ***envp, int i_exit);
 int		execute_toplevel_command(t_token *node, char ***envp, int l_exit);
 void	execute_child_command(t_token *node, char ***envp, int l_exit);

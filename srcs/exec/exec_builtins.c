@@ -46,54 +46,45 @@ static int	count_potential_args(t_token *node)
 	return (count);
 }
 
-/**
- * @brief Runs the loop to populate argv, processing each token.
- * @param argv The pre-allocated array to fill.
- * @param max_count The maximum number of tokens to process.
- * @param start_node The first token in the command chain.
- * @param envp_ptr A pointer to the environment variables.
- * @return Returns the populated argv array, or NULL on error.
- */
-static char	**run_population_loop(char **argv, int max_count, \
-				t_token *start_node, char ***envp_ptr, int l_exit)
+static char    **run_population_loop(char **argv, int max_count,
+                t_token *start_node, t_exec_context *ctx)
 {
-	int		actual_i;
-	t_token	*curr;
-	int		i;
+    int     actual_i;
+    t_token *curr;
+    int     i;
 
-	actual_i = 0;
-	curr = start_node;
-	i = -1;
-	while (++i < max_count)
-	{
-		if (!process_single_token(curr, argv, &actual_i, envp_ptr, l_exit))
-			return (free_and_nullify_argv(argv, actual_i));
-		curr = curr->right;
-	}
-	argv[actual_i] = NULL;
-	if (actual_i == 0)
-		return (free_and_nullify_argv(argv, 0));
-	return (argv);
+    actual_i = 0;
+    curr = start_node;
+    i = -1;
+    while (++i < max_count)
+    {
+        if (!process_single_token(curr, argv, &actual_i, ctx))
+            return (free_and_nullify_argv(argv, actual_i));
+        curr = curr->right;
+    }
+    argv[actual_i] = NULL;
+    if (actual_i == 0)
+        return (free_and_nullify_argv(argv, 0));
+    return (argv);
 }
 
-/**
- * @brief Sets up and builds an argv array from a token list.
- * This function handles the initial counting and allocation.
- */
-char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr, int l_exit)
+char    **build_argv_from_ast(t_token *cmd_node, char ***envp_ptr, int l_exit)
 {
-	int		max_count;
-	char	**argv;
+    int             max_count;
+    char            **argv;
+    t_exec_context  ctx;
 
-	if (!cmd_node)
-		return (NULL);
-	max_count = count_potential_args(cmd_node);
-	if (max_count == 0)
-		return (NULL);
-	argv = (char **)malloc(sizeof(char *) * (max_count + 1));
-	if (!argv)
-		return (perror("minishell: malloc failed"), NULL);
-	return (run_population_loop(argv, max_count, cmd_node, envp_ptr, l_exit));
+    if (!cmd_node)
+        return (NULL);
+    max_count = count_potential_args(cmd_node);
+    if (max_count == 0)
+        return (NULL);
+    argv = (char **)malloc(sizeof(char *) * (max_count + 1));
+    if (!argv)
+        return (perror("minishell: malloc failed"), NULL);
+    ctx.envp_ptr = envp_ptr;
+    ctx.l_exit = l_exit;
+    return (run_population_loop(argv, max_count, cmd_node, &ctx));
 }
 
 /**

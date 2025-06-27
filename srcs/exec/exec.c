@@ -61,32 +61,30 @@ int	read_heredoc_to_pipe(const char *delimiter)
 	return (pipefd[0]);
 }
 
-/**
- * @brief Processes one token, expands and adds it to the argv array
- * @return Returns true on success, false on failure.
- */
-bool	process_single_token(t_token *curr, char **argv, \
-				int *actual_i_ptr, char ***envp_ptr, int l_exit)
+bool    process_single_token(t_token *curr, char **argv,
+            int *actual_i_ptr, t_exec_context *ctx)
 {
-	char	*expanded_str;
+    char            *expanded_str;
+    t_quote_status  quotes;
 
-	if (!curr || !curr->string)
-	{
-		fprintf(stderr, "minishell: unexpected NULL node or string.\n");
-		return (false);
-	}
-	expanded_str = expand_all_variables(curr->string, *envp_ptr, \
-						curr->single_quote, curr->double_quote, l_exit);
-	if (!expanded_str)
-		return (perror("minishell: argument expansion failed"), false);
-	if (expanded_str[0] == '\0' && curr->double_quote == 0)
-		free(expanded_str);
-	else
-	{
-		argv[*actual_i_ptr] = expanded_str;
-		(*actual_i_ptr)++;
-	}
-	return (true);
+    if (!curr || !curr->string)
+    {
+        fprintf(stderr, "minishell: unexpected NULL node or string.\n");
+        return (false);
+    }
+    quotes.is_single = curr->single_quote;
+    quotes.is_double = curr->double_quote;
+    expanded_str = expand_all_variables(curr->string, quotes, ctx);
+    if (!expanded_str)
+        return (perror("minishell: argument expansion failed"), false);
+    if (expanded_str[0] == '\0' && curr->double_quote == 0)
+        free(expanded_str);
+    else
+    {
+        argv[*actual_i_ptr] = expanded_str;
+        (*actual_i_ptr)++;
+    }
+    return (true);
 }
 
 /**

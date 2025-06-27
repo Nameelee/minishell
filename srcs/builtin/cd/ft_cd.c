@@ -56,6 +56,26 @@ static void	update_pwd_vars(const char *old_pwd, char ***envp)
 }
 
 /*
+** @brief      Resolves the target path for the 'cd' command.
+** @param arg  The argument from the command line (can be NULL).
+** @return     The path to change to, or NULL if resolution fails.
+*/
+static char	*resolve_path(const char *arg)
+{
+	if (arg == NULL)
+	{
+		const char *home = getenv("HOME");
+		if (home == NULL)
+		{
+			ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO);
+			return (NULL);
+		}
+		return (ft_strdup(home));
+	}
+	return (ft_strdup(arg));
+}
+
+/*
 ** @brief      내장 명령어 'cd'를 실행합니다.
 */
 int	ft_cd(char **args, char ***envp)
@@ -73,19 +93,16 @@ int	ft_cd(char **args, char ***envp)
 		perror("minishell: cd: getcwd");
 		return (1);
 	}
-	path_to_go = args[1];
+	path_to_go = resolve_path(args[1]);
 	if (path_to_go == NULL)
-		path_to_go = getenv("HOME");
-	if (path_to_go == NULL)
-	{
-		ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO);
 		return (1);
-	}
 	if (chdir(path_to_go) == -1)
 	{
 		perror("minishell: cd");
+		free(path_to_go);
 		return (1);
 	}
+	free(path_to_go);
 	update_pwd_vars(old_pwd_buffer, envp);
 	return (0);
 }
