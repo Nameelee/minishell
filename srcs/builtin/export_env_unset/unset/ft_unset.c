@@ -47,7 +47,8 @@ static int	find_var_index(char **envp, const char *var_to_find)
 	while (envp[i])
 	{
 		var_name = ft_parse_env_variable(envp[i]);
-		if (var_name && ft_strncmp(var_name, var_to_find, ft_strlen(var_to_find) + 1) == 0)
+		if (var_name && ft_strncmp(var_name, var_to_find,
+				ft_strlen(var_to_find) + 1) == 0)
 		{
 			free(var_name);
 			return (i);

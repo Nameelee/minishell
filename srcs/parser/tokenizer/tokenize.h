@@ -170,6 +170,7 @@ t_token			*ft_finalize_word_node(char *buffer, int token_type,
 					t_fin_quote quote_status, int seg_count);
 t_token			*ft_handle_word(const char *str, size_t *i, size_t input_len,
 					t_token **list_head);
+t_token			*ft_get_last_token(t_token *list);
 bool			ft_append_next_segment(const char *str, size_t *idx,
 					size_t input_len, t_word_aggregator *agg);
 bool			is_whitespace(char c);
@@ -184,6 +185,8 @@ t_unquot_pdata	ft_handle_unquoted_piece(const char *str_input,
 					size_t *idx_ptr, size_t len_input, t_word_aggregator *agg);
 t_quoted_pdata	ft_handle_quoted_piece(const char *str_input, size_t *idx_ptr,
 					size_t len_input, t_word_aggregator *agg);
+bool			ft_init_word_build(t_word_build_state *state,
+					t_word_aggregator *agg, t_token **list_head);
 
 //create_ast
 t_token			*get_next_node(t_token **token_list);

@@ -28,21 +28,18 @@ static char	*get_path_variable(char **envp)
 	return (NULL);
 }
 
-static char	*get_full_path(const char *cmd, char **envp)
+/**
+ * @brief Searches for the command in the directories specified by the
+ * PATH environment variable.
+ * @return An allocated string of the full path if found, otherwise NULL.
+ */
+static char	*find_in_path_variable(const char *cmd, char **envp)
 {
 	char	**paths;
 	char	*path_var;
 	char	*full_path;
 	int		i;
 
-	if (!cmd || cmd[0] == '\0')
-		return (NULL);
-	if (ft_strchr(cmd, '/'))
-	{
-		if (access(cmd, F_OK) == 0)
-			return (ft_strdup(cmd));
-		return (NULL);
-	}
 	path_var = get_path_variable(envp);
 	if (!path_var)
 		return (NULL);
@@ -62,6 +59,24 @@ static char	*get_full_path(const char *cmd, char **envp)
 	}
 	ft_split_clean(&paths);
 	return (NULL);
+}
+
+/**
+ * @brief Finds the full, executable path for a given command by checking for
+ * a direct path first, then searching the PATH variable.
+ * @return An allocated string of the full path, or NULL if not found.
+ */
+static char	*get_full_path(const char *cmd, char **envp)
+{
+	if (!cmd || cmd[0] == '\0')
+		return (NULL);
+	if (ft_strchr(cmd, '/'))
+	{
+		if (access(cmd, F_OK) == 0)
+			return (ft_strdup(cmd));
+		return (NULL);
+	}
+	return (find_in_path_variable(cmd, envp));
 }
 
 static void	handle_execve_error(char **argv, char *full_path)
@@ -98,68 +113,4 @@ static void	check_for_directory(char **argv)
 			}
 		}
 	}
-}
-
-static void	execute_simple_command(t_token *cmd_node, char ***envp, int l_exit)
-{
-	char	**argv;
-	char	*full_path;
-
-	argv = build_argv_from_ast(cmd_node, envp, l_exit);
-	if (!argv)
-		exit(0);
-	check_for_directory(argv);
-	full_path = get_full_path(argv[0], *envp);
-	if (!full_path)
-	{
-		fprintf(stderr, "minishell: %s: command not found\n", argv[0]);
-		free_argv(argv);
-		exit(127);
-	}
-	execve(full_path, argv, *envp);
-	handle_execve_error(argv, full_path);
-}
-
-/**
- * @brief Handles unrecognized token types that cannot be executed.
- */
-static void	handle_unknown_command(t_token *node, char ***envp)
-{
-	if (is_expendable_variable(node->string, *envp) == 2
-		|| !ft_strncmp(node->string, "$?",
-			ft_strlen_longest(node->string, "$?")))
-	{
-		write(STDERR_FILENO, " command not found\n", 20);
-		exit(127);
-	}
-	if (ft_is_variable(node->string)
-		&& !is_expendable_variable(node->string, *envp))
-		exit(0);
-	if (ft_is_variable(node->string)
-		&& is_expendable_variable(node->string, *envp) == 1)
-	{
-		write(STDERR_FILENO, " Is a directory\n", 16);
-		exit(126);
-	}
-	fprintf(stderr, "minishell: %s: command not found (token type %d)\n",
-		node->string, node->token);
-	exit(127);
-}
-
-/**
- * @brief Dispatches a command node to the correct execution function.
- */
-void	dispatch_command_execution(t_token *cmd_node, char ***envp, int l_exit)
-{
-	if (!cmd_node)
-		exit(0);
-	if (cmd_node->token == PIPE)
-		exit(execute_pipe(cmd_node, envp));
-	else if (cmd_node->token == BUILTIN)
-		exit(ft_execute_builtin(cmd_node, envp, l_exit));
-	else if (cmd_node->token == CMD || cmd_node->token == WORD
-		|| cmd_node->token == VAR)
-		execute_simple_command(cmd_node, envp, l_exit);
-	else
-		handle_unknown_command(cmd_node, envp);
 }

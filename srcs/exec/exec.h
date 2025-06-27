@@ -53,6 +53,7 @@ typedef struct s_exp_data
 	const char	*input_str;
 }	t_exp_data;
 
+//int		is_numeric(const char *str);
 int		execute_ast(t_token *node, char ***envp, bool is_top_level,
 			int exit_status);
 int		ft_execute_builtin(t_token *node, char ***envp_ptr, int exit_status);
@@ -65,7 +66,7 @@ int		is_expendable_variable(char *var, char **envp);
 char	**build_argv_from_ast(t_token *cmd_node, char ***envp_ptr, int l_exit);
 char	**free_and_nullify_argv(char **argv, int count);
 bool	process_single_token(t_token *curr, char **argv,
-            int *actual_i_ptr, t_exec_context *ctx);
+			int *actual_i_ptr, t_exec_context *ctx);
 void	dispatch_command_execution(t_token *cmd_node, char ***envp, int i_exit);
 int		execute_toplevel_command(t_token *node, char ***envp, int l_exit);
 void	execute_child_command(t_token *node, char ***envp, int l_exit);

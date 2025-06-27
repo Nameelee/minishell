@@ -43,10 +43,45 @@ static t_token	*process_line(char *line)
 	return (ast_root);
 }
 
+/**
+ * @brief Parses and executes a single line of input.
+ * @param line The line read from the prompt.
+ * @param envp_ptr A pointer to the environment variables array.
+ * @param exit_status_ptr A pointer to the shell's exit status.
+ * @return The final exit code if the shell should terminate, or -1 to continue.
+ */
+static int	process_input_line(char *line, char ***envp_ptr,
+				int *exit_status_ptr)
+{
+	t_token	*ast_root;
+	int		new_status;
+
+	ast_root = process_line(line);
+	if (ast_root)
+	{
+		new_status = execute_ast(ast_root, envp_ptr, true, *exit_status_ptr);
+		free_ast(ast_root);
+		if (new_status >= 256)
+			return (new_status - 256);
+		*exit_status_ptr = new_status;
+	}
+	else
+	{
+		if (line_is_empty_or_whitespace(line))
+			*exit_status_ptr = 0;
+		else
+			*exit_status_ptr = 2;
+	}
+	return (-1);
+}
+
+/**
+ * @brief The main Read-Eval-Print-Loop (REPL) of the shell.
+ * @return The final exit status of the shell.
+ */
 int	ft_read_line(char *prompt, char **envp)
 {
 	char	*line;
-	t_token	*ast_root;
 	int		exit_status;
 	int		final_code;
 
@@ -59,29 +94,13 @@ int	ft_read_line(char *prompt, char **envp)
 			printf("exit\n");
 			return (exit_status);
 		}
-		ast_root = process_line(line);
-		if (ast_root)
-		{
-			exit_status = execute_ast(ast_root, &envp, true, exit_status);
-			if (exit_status >= 256)
-			{
-				final_code = exit_status - 256;
-				free_ast(ast_root);
-				free(line);
-				return (final_code);
-			}
-			free_ast(ast_root);
-		}
-		else
-		{
-			if (line_is_empty_or_whitespace(line))
-				exit_status = 0;
-			else
-				exit_status = 2;
-		}
+		final_code = process_input_line(line, &envp, &exit_status);
 		free(line);
+		if (final_code != -1)
+		{
+			return (final_code);
+		}
 	}
-	return (exit_status);
 }
 
 int	ft_start_minishell(char *str, char **envp)
