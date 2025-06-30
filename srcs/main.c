@@ -52,7 +52,7 @@ int	main(int argc, char **argv, char **envp)
 	{
 		return (EXIT_FAILURE);
 	}
-	final_exit_status = ft_start_minishell("minishell: ", dupplicate_env);
+	final_exit_status = ft_start_minishell("minishell: ", &dupplicate_env);
 	free_duplicated_env(dupplicate_env);
 	return (final_exit_status);
 }

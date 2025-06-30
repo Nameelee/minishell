@@ -66,7 +66,7 @@ static char	*find_in_path_variable(const char *cmd, char **envp)
  * a direct path first, then searching the PATH variable.
  * @return An allocated string of the full path, or NULL if not found.
  */
-static char	*get_full_path(const char *cmd, char **envp)
+char	*get_full_path(const char *cmd, char **envp)
 {
 	if (!cmd || cmd[0] == '\0')
 		return (NULL);
@@ -79,7 +79,7 @@ static char	*get_full_path(const char *cmd, char **envp)
 	return (find_in_path_variable(cmd, envp));
 }
 
-static void	handle_execve_error(char **argv, char *full_path)
+void	handle_execve_error(char **argv, char *full_path)
 {
 	fprintf(stderr, "minishell: %s: ", argv[0]);
 	if (errno == EACCES)
@@ -97,7 +97,7 @@ static void	handle_execve_error(char **argv, char *full_path)
  * @brief Checks if a command path is a directory before trying to execute it.
  * This function exits with code 126 if the path is a directory.
  */
-static void	check_for_directory(char **argv)
+void	check_for_directory(char **argv)
 {
 	struct stat	path_stat;
 

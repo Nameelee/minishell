@@ -79,7 +79,7 @@ static int	process_input_line(char *line, char ***envp_ptr,
  * @brief The main Read-Eval-Print-Loop (REPL) of the shell.
  * @return The final exit status of the shell.
  */
-int	ft_read_line(char *prompt, char **envp)
+int	ft_read_line(char *prompt, char ***envp)
 {
 	char	*line;
 	int		exit_status;
@@ -94,7 +94,7 @@ int	ft_read_line(char *prompt, char **envp)
 			printf("exit\n");
 			return (exit_status);
 		}
-		final_code = process_input_line(line, &envp, &exit_status);
+		final_code = process_input_line(line, envp, &exit_status);
 		free(line);
 		if (final_code != -1)
 		{
@@ -103,7 +103,7 @@ int	ft_read_line(char *prompt, char **envp)
 	}
 }
 
-int	ft_start_minishell(char *str, char **envp)
+int	ft_start_minishell(char *str, char ***envp)
 {
 	int	exit_code;
 

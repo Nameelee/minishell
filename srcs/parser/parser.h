@@ -30,7 +30,7 @@
 # include "tokenizer/tokenize.h"
 # include "../exec/exec.h"
 
-int	ft_start_minishell(char *str, char **envp);
-int	ft_read_line(char *str, char **envp);
+int	ft_start_minishell(char *str, char ***envp);
+int	ft_read_line(char *str, char ***envp);
 
 #endif

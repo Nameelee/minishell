@@ -71,10 +71,7 @@ void	execute_child_command(t_token *node, char ***envp, int l_exit)
 	dispatch_command_execution(cmd_node, envp, l_exit);
 }
 
-/**
- * @brief Waits for the main command process and sets the global exit status.
- */
-static int	wait_and_get_status(pid_t pid)
+int	wait_and_get_status(pid_t pid)
 {
 	int	status;
 	int	exit_status;

@@ -105,6 +105,7 @@ t_token	*ft_parse(char *str)
 	ast_root = ft_create_ast(token_list_head);
 	if (!ast_root && token_list_head)
 	{
+		free_token_list(token_list_head);
 	}
 	return (ast_root);
 }

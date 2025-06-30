@@ -90,6 +90,8 @@ int	add_new_variable(char **old_ev, char **new_ev, char *new_var, size_t *idx)
 				new_ev[(*idx)++] = tmp;
 			return (0);
 		}
+		else
+			free(tmp);
 	}
 	return (1);
 }

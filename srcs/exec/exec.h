@@ -70,6 +70,10 @@ bool	process_single_token(t_token *curr, char **argv,
 void	dispatch_command_execution(t_token *cmd_node, char ***envp, int i_exit);
 int		execute_toplevel_command(t_token *node, char ***envp, int l_exit);
 void	execute_child_command(t_token *node, char ***envp, int l_exit);
+void	check_for_directory(char **argv);
+void	handle_execve_error(char **argv, char *full_path);
+char	*get_full_path(const char *cmd, char **envp);
+int		wait_and_get_status(pid_t pid);
 // expand
 char	*get_var_name(const char *str_after_dollar,
 			size_t *len_of_var_in_input);

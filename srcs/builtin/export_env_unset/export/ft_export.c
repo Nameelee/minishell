@@ -98,7 +98,10 @@ int	ft_export(char ***env, char **split_args)
 		return (display_export_env(env));
 	tmp_env = add_variable_ex(env, &split_args[1], &error_occurred);
 	if (tmp_env)
+	{
+		free_duplicated_env(*env);
 		*env = tmp_env;
+	}
 	if (error_occurred > 0)
 		return (1);
 	return (0);
