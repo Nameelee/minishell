@@ -26,18 +26,12 @@
 # include <readline/history.h>
 # include "../parser/tokenizer/tokenize.h"
 # include "../builtin/builtin.h"
+# include "../../include/main.h"
 
 typedef struct s_token			t_token;
 typedef struct s_quote_status	t_quote_status;
 typedef struct s_exec_context	t_exec_context;
 typedef struct s_redir			t_redir;
-
-// typedef struct s_exp_context
-// {
-// 	char		**envp;
-// 	const char	*input_str;
-// 	bool		is_double_quoted;
-// }	t_exp_context;
 
 typedef struct s_exec_context {
 	char	***envp_ptr;
@@ -53,7 +47,6 @@ typedef struct s_exp_data
 	const char	*input_str;
 }	t_exp_data;
 
-//int		is_numeric(const char *str);
 int		execute_ast(t_token *node, char ***envp, bool is_top_level,
 			int exit_status);
 int		ft_execute_builtin(t_token *node, char ***envp_ptr, int exit_status);

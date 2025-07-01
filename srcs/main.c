@@ -12,7 +12,29 @@
 
 #include "../include/main.h"
 
-//int	g_exit_status = 0;
+void ft_fprintf(const char *prefix, const char *arg, const char *suffix)
+{
+	char	*temp_str;
+	char	*final_str;
+
+	temp_str = NULL;
+	final_str = NULL;
+	temp_str = ft_strjoin(prefix, arg);
+	if (temp_str == NULL)
+	{
+		ft_putendl_fd("Memory alloc failed error printing.", STDERR_FILENO);
+		return;
+	}
+	final_str = ft_strjoin(temp_str, suffix);
+	free(temp_str);
+	if (final_str == NULL)
+	{
+		ft_putendl_fd("Memory alloc failed error printing.", STDERR_FILENO);
+		return ;
+	}
+	ft_putstr_fd(final_str, STDERR_FILENO);
+	free(final_str);
+}
 
 void	sigint_handler(int signal)
 {

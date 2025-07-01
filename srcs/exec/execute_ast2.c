@@ -29,7 +29,8 @@ t_redir	*parse_redirection_nodes(t_token **cmd_node_ptr)
 	{
 		if (!(*cmd_node_ptr)->right || !(*cmd_node_ptr)->right->string)
 		{
-			fprintf(stderr, "minishell: syntax error near redirection\n");
+			//fprintf(stderr, "minishell: syntax error near redirection\n");
+			ft_fprintf("minishell: syntax error near redirection\n", "", "");
 			free_redir_list(redir_list);
 			exit(1);
 		}
@@ -73,8 +74,9 @@ void	execute_child_command(t_token *node, char ***envp, int l_exit)
 
 int	wait_and_get_status(pid_t pid)
 {
-	int	status;
-	int	exit_status;
+	int		status;
+	int		exit_status;
+	char	*status_str; 
 
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status))
@@ -86,7 +88,15 @@ int	wait_and_get_status(pid_t pid)
 			write(STDOUT_FILENO, "\n", 1);
 		else if (WTERMSIG(status) == SIGQUIT)
 		{
-			fprintf(stderr, "Quit: %d\n", WTERMSIG(status));
+			//fprintf(stderr, "Quit: %d\n", WTERMSIG(status));
+			status_str = ft_itoa(WTERMSIG(status));
+			if (status_str == NULL) 
+			{
+				ft_fprintf("Memory alloc fail error printing.\n", "", "");
+				return (1);
+			}
+			ft_fprintf("Quit: ", status_str, "\n");
+			free(status_str);
 		}
 	}
 	else

@@ -48,6 +48,7 @@
 
 char **ft_duplicate_env(char *envp[]);
 void free_duplicated_env(char **dup_envp);
+void ft_fprintf(const char *prefix, const char *arg, const char *suffix);
 
 
 #endif 

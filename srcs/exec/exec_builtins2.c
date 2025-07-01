@@ -32,7 +32,8 @@ static int	dispatch_builtin(char **argv, char ***envp_ptr)
 		return (ft_unset(argv, envp_ptr));
 	else if (ft_strncmp(argv[0], "env", 4) == 0)
 		return (ft_env(argv, envp_ptr));
-	fprintf(stderr, "minishell: %s: builtin not recognized\n", argv[0]);
+	//fprintf(stderr, "minishell: %s: builtin not recognized\n", argv[0]);
+	ft_fprintf("minishell: ", argv[0], ": builtin not recognized\n");
 	return (127);
 }
 
@@ -50,13 +51,15 @@ static int	handle_exit_command(char **argv, int exit_status)
 	{
 		if (!is_numeric(argv[1]))
 		{
-			fprintf(stderr,
-				"minishell: exit: %s: numeric argument required\n", argv[1]);
+			// fprintf(stderr,
+			//  	"minishell: exit: %s: numeric argument required\n", argv[1]);
+			ft_fprintf("minishell: exit: ", argv[1], ": numeric argument required\n");
 			final_exit_code = 2;
 		}
 		else if (argv[2])
 		{
-			fprintf(stderr, "minishell: exit: too many arguments\n");
+			//fprintf(stderr, "minishell: exit: too many arguments\n");
+			ft_fprintf("minishell: exit: too many arguments\n", "", "");
 			return (1);
 		}
 		else
