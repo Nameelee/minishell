@@ -24,7 +24,7 @@ static void	execute_simple_command(t_token *cmd_node, char ***envp, int l_exit)
 	full_path = get_full_path(argv[0], *envp);
 	if (!full_path)
 	{
-		fprintf(stderr, "minishell: %s: command not found\n", argv[0]);
+		ft_fprintf("minishell: ", argv[0], ": command not found\n");
 		free_argv(argv);
 		exit(127);
 	}
@@ -53,8 +53,7 @@ static void	handle_unknown_command(t_token *node, char ***envp)
 		write(STDERR_FILENO, " Is a directory\n", 16);
 		exit(126);
 	}
-	fprintf(stderr, "minishell: %s: command not found (token type %d)\n",
-		node->string, node->token);
+	ft_fprintf("minishell: ", "", ": command not found\n");
 	exit(127);
 }
 

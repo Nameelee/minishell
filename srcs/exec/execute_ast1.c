@@ -81,10 +81,8 @@ char	*get_full_path(const char *cmd, char **envp)
 
 void	handle_execve_error(char **argv, char *full_path)
 {
-	//fprintf(stderr, "minishell: %s: ", argv[0]);
 	ft_fprintf("minishell: ", argv[0], ": ");
 	if (errno == EACCES)
-		//fprintf(stderr, "Permission denied\n");
 		ft_fprintf("Permission denied\n", "", "");
 	else
 		perror(NULL);
@@ -109,7 +107,6 @@ void	check_for_directory(char **argv)
 		{
 			if (S_ISDIR(path_stat.st_mode))
 			{
-				//fprintf(stderr, "minishell: %s: Is a directory\n", argv[0]);
 				ft_fprintf("minishell: ", argv[0], ": Is a directory\n");
 				free_argv(argv);
 				exit(126);

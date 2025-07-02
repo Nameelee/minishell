@@ -55,7 +55,7 @@ static t_tokenize_status	ft_process_single_token(const char *str, size_t *i,
 	{
 		if (*i < input_len && !is_whitespace(str[*i]))
 		{
-			fprintf(stderr, "tokenizer error near '%.*s'\n", 10, &str[*i]);
+			ft_fprintf("", "", "tokenizer error\n");
 			free_token_list(*list_head);
 			return (TOKENIZE_ERROR);
 		}

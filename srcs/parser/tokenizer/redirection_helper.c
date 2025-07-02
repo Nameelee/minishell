@@ -106,7 +106,7 @@ int	apply_redir_heredoc(t_redir *redir_item)
 		|| redir_item->heredoc_node->heredoc_state != HD_PROCESSED_OK
 		|| redir_item->heredoc_node->heredoc_pipe_fd < 0)
 	{
-		fprintf(stderr, "internal error or heredoc not ready\n");
+		ft_fprintf("", "", "internal error or heredoc not ready\n");
 		return (-1);
 	}
 	heredoc_fd_to_dup = redir_item->heredoc_node->heredoc_pipe_fd;

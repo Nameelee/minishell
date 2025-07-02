@@ -50,7 +50,7 @@ int	attach_prefix_redir(t_ast_state *s)
 	}
 	else
 	{
-		fprintf(stderr, "AST Error: Prefix redirection in unexpected state.\n");
+		ft_fprintf("", "", "AST Error: Prefix redirection\n");
 		return (0);
 	}
 	return (1);
@@ -80,7 +80,7 @@ int	handle_pipe(t_ast_state *s)
 {
 	if (!*(s->root) || !*(s->csc_head))
 	{
-		fprintf(stderr, "minishell: syntax error near unexpected token `|'\n");
+		ft_fprintf("", "", "syntax error unexpected token `|'\n");
 		return (0);
 	}
 	s->new_node->left = *(s->root);
@@ -102,7 +102,7 @@ int	handle_redir(t_ast_state *s, t_token **token_list)
 
 	if (!*token_list || !is_filename_type((*token_list)->token))
 	{
-		fprintf(stderr, "minishell: syntax error: missing filename\n");
+		ft_fprintf("", "", "minishell: syntax error: missing filename\n");
 		return (0);
 	}
 	filename_node = get_next_node(token_list);

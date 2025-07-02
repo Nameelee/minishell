@@ -24,9 +24,7 @@ int	preprocess_heredocs(t_token *node)
 	{
 		if (!node->right || !node->right->string)
 		{
-			// fprintf(stderr,
-			// 	"minishell: syntax error: missing delimiter for heredoc\n");
-			ft_fprintf("minishell: syntax error: missing delimiter for heredoc\n", "", "");
+			ft_fprintf("syntax error: missing delimiter for heredoc\n", "", "");
 			node->heredoc_state = HD_PROCESSING_FAILED;
 			return (-1);
 		}

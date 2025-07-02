@@ -52,7 +52,7 @@ char	*ft_extract_quoted_segment(t_parse_state *p_state, char quote_char,
 	ft_advance_to_closing_quote(p_state, quote_char);
 	if (*(p_state->current_idx_ptr) >= p_state->total_len)
 	{
-		fprintf(stderr, "syntax error: unclosed quote %c\n", quote_char);
+		ft_fprintf("", "", "syntax error: unclosed quote\n");
 		ft_cleanup_on_extraction_error(agg);
 		return (NULL);
 	}

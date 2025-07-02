@@ -37,7 +37,7 @@ static t_token	*process_line(char *line)
 	if (!ast_root)
 	{
 		if (!line_is_empty_or_whitespace(line))
-			fprintf(stderr, "minishell: syntax error\n");
+			ft_fprintf("minishell: ", "", ": syntax error\n");
 		return (NULL);
 	}
 	return (ast_root);

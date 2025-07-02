@@ -58,8 +58,7 @@ static bool	ft_process_next_token(t_ast_state *state, t_token **token_list)
 	}
 	else
 	{
-		fprintf(stderr, "AST Error: Unhandled token type %d\n",
-			state->new_node->token);
+		ft_fprintf("", "", "AST Error: Command in unexpected state.\n");
 		return (false);
 	}
 	return (true);

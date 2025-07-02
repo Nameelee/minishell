@@ -70,7 +70,7 @@ int	attach_new_command(t_ast_state *s)
 		attach_cmd_to_redir(s);
 	else
 	{
-		fprintf(stderr, "AST Error: Command in unexpected state.\n");
+		ft_fprintf("", "", "AST Error: Command in unexpected state.\n");
 		return (0);
 	}
 	return (1);

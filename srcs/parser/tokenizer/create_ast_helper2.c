@@ -70,7 +70,7 @@ int	is_valid_ast(t_token *root)
 {
 	if (root && root->token == PIPE && (!root->left || !root->right))
 	{
-		fprintf(stderr, "minishell: syntax error: incomplete pipe\n");
+		ft_fprintf("", "", "minishell: syntax error: incomplete pipe\n");
 		return (0);
 	}
 	return (1);

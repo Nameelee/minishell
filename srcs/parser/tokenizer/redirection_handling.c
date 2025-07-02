@@ -59,7 +59,7 @@ int	apply_redirections(t_redir *list)
 			status = apply_redir_heredoc(current);
 		else
 		{
-			fprintf(stderr, "unknown redirection type %d\n", current->type);
+			ft_fprintf("", "", "unknown redirection type \n");
 			status = -1;
 		}
 		if (status == -1)

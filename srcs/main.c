@@ -12,7 +12,7 @@
 
 #include "../include/main.h"
 
-void ft_fprintf(const char *prefix, const char *arg, const char *suffix)
+void	ft_fprintf(const char *prefix, const char *arg, const char *suffix)
 {
 	char	*temp_str;
 	char	*final_str;
@@ -23,7 +23,7 @@ void ft_fprintf(const char *prefix, const char *arg, const char *suffix)
 	if (temp_str == NULL)
 	{
 		ft_putendl_fd("Memory alloc failed error printing.", STDERR_FILENO);
-		return;
+		return ;
 	}
 	final_str = ft_strjoin(temp_str, suffix);
 	free(temp_str);

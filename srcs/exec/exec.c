@@ -26,9 +26,6 @@ static void	heredoc_input_loop(int write_fd, const char *delimiter)
 		line = readline("> ");
 		if (!line)
 		{
-			// fprintf(stderr,
-			//  	"minishell:here-doc delimited by end-of-file (wanted `%s')\n",
-			//  	delimiter);
 			ft_fprintf("minishell:here-doc delimited by end-of-file (wanted `",
 				delimiter, "')\n");
 			break ;
@@ -71,7 +68,6 @@ bool	process_single_token(t_token *curr, char **argv,
 
 	if (!curr || !curr->string)
 	{
-		//fprintf(stderr, "minishell: unexpected NULL node or string.\n");
 		ft_fprintf("minishell: unexpected NULL node or string.\n", "", "");
 		return (false);
 	}
