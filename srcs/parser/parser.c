@@ -13,76 +13,100 @@
 #include "parser.h"
 #include "tokenizer/tokenize.h"
 
-
-
-
-
-/* Previous version of Cedric
-int ft_read_line(char *str)
+bool	line_is_empty_or_whitespace(const char *str)
 {
-    char *line;
-    t_token **token_lst;
-
-    while (1)
-    {
-        line = readline(str);
-        if(!line)
-            return(1);
-		assert(line);
-        token_lst = ft_tokenize(line);
-		ft_display_token_sequence_lst(*token_lst);
-		
-    }
-    return(0);
-}
-*/
-
-int ft_read_line(char *prompt, char **envp)
-{
-    char *line;
-    int return_value;
-    t_token *ast_root;  // Now ft_tokenize returns a single AST root
-
-    return_value = 0;
-    while (1)
-    {
-        line = readline(prompt);
-        if (!line)
-            return 1;
-
-        assert(line);
-		add_history(line);//permitted lib
-        //ast_root = ft_tokenize(line);  // Returns AST root now
-		ast_root= ft_parse(line);
-        if (!ast_root)
-        {
-            // --- SET EXIT STATUS FOR PARSE ERROR ---
-			// Make sure NO output goes to stdout here. Errors to stderr if desired.
-			// fprintf(stderr, "minishell: syntax error\n"); // Example error to stderr
-			//g_exit_status = 258; // Common exit code for syntax errors in bash
-			// --- END SET EXIT STATUS ---
-            free(line);
-            continue;
-        }
-        
-        //ft_binary_tree_traversal(ast_root);
-		//don't delete print_ast_start(ast_root);
-        //ft_binary_tree_traversal(ast_root);
-
-		execute_ast(ast_root, &envp, true); // Execute AST!
-		//fprintf(stderr, "DEBUG_FT_READ_LINE: After execute_ast, g_exit_status = %d\n", g_exit_status); // ★★★ 추가 확인
-        ft_export(&envp, ft_split(ft_strjoin("export ?=", ft_itoa(return_value)), 32));
-        free(line);  // Free input line after processing
-		//fprintf(stderr, "DEBUG_FT_READ_LINE: End of loop iteration, g_exit_status = %d\n", g_exit_status); // ★★★ 추가 확인
-    }
-    return(return_value);
+	if (!str)
+		return (true);
+	while (*str)
+	{
+		if (*str != ' ' && *str != '\t' && *str != '\n'
+			&& *str != '\v' && *str != '\f' && *str != '\r')
+			return (false);
+		str++;
+	}
+	return (true);
 }
 
-int  ft_start_minishell(char *str, char **envp)
+static t_token	*process_line(char *line)
 {
-    int read;
-    read = ft_read_line(str, envp);
-    if(read == 1)
-        return(1);
-    return(0);
+	t_token	*ast_root;
+
+	if (line[0] != '\0')
+		add_history(line);
+	ast_root = ft_parse(line);
+	if (!ast_root)
+	{
+		if (!line_is_empty_or_whitespace(line))
+			ft_fprintf("minishell: ", "", ": syntax error\n");
+		return (NULL);
+	}
+	return (ast_root);
+}
+
+/**
+ * @brief Parses and executes a single line of input.
+ * @param line The line read from the prompt.
+ * @param envp_ptr A pointer to the environment variables array.
+ * @param exit_status_ptr A pointer to the shell's exit status.
+ * @return The final exit code if the shell should terminate, or -1 to continue.
+ */
+static int	process_input_line(char *line, char ***envp_ptr,
+				int *exit_status_ptr)
+{
+	t_token	*ast_root;
+	int		new_status;
+
+	ast_root = process_line(line);
+	if (ast_root)
+	{
+		new_status = execute_ast(ast_root, envp_ptr, true, *exit_status_ptr);
+		free_ast(ast_root);
+		if (new_status >= 256)
+			return (new_status - 256);
+		*exit_status_ptr = new_status;
+	}
+	else
+	{
+		if (line_is_empty_or_whitespace(line))
+			*exit_status_ptr = 0;
+		else
+			*exit_status_ptr = 2;
+	}
+	return (-1);
+}
+
+/**
+ * @brief The main Read-Eval-Print-Loop (REPL) of the shell.
+ * @return The final exit status of the shell.
+ */
+int	ft_read_line(char *prompt, char ***envp)
+{
+	char	*line;
+	int		exit_status;
+	int		final_code;
+
+	exit_status = 0;
+	while (1)
+	{
+		line = readline(prompt);
+		if (!line)
+		{
+			printf("exit\n");
+			return (exit_status);
+		}
+		final_code = process_input_line(line, envp, &exit_status);
+		free(line);
+		if (final_code != -1)
+		{
+			return (final_code);
+		}
+	}
+}
+
+int	ft_start_minishell(char *str, char ***envp)
+{
+	int	exit_code;
+
+	exit_code = ft_read_line(str, envp);
+	return (exit_code);
 }

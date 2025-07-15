@@ -1,129 +1,110 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ft_cd.c                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ast <ast@student.42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/26 12:30:49 by cbouhadr          #+#    #+#             */
-/*   Updated: 2025/05/03 22:38:41 by ast              ###   ########.fr       */
+/*                                                         ::::::::           */
+/*   ft_cd.c                                             :+:    :+:           */
+/*                                                      +:+                   */
+/*   By: jelee <marvin@42.fr>                          +#+                    */
+/*                                                    +#+                     */
+/*   Created: 2025/06/17 14:46:39 by jelee          #+#    #+#                */
+/*   Updated: 2025/06/17 14:46:42 by jelee          ########   odam.nl        */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #include "../builtin.h"
 
-
-
-char *ft_trim_path(char *path)
+/*
+** @brief      지정된 key와 path로 환경 변수를 설정하는 헬퍼 함수
+** (예: key="PWD", path="/home/user")
+** @param key  환경 변수의 이름 (PWD 또는 OLDPWD)
+** @param path 설정할 경로 문자열
+** @param envp 환경 변수 배열의 포인터
+*/
+static void	set_pwd_env(const char *key, const char *path, char ***envp)
 {
-	int i;
-	int len;
+	char	*temp_str;
+	char	*full_export_str;
+	char	*export_args[3];
 
-	len = ft_strlen(path);
-	i = 0;
-	while (path[i] == 32)
-		i++;
-	while (path[i] == 32)
-		i++;
-	ft_memmove(path,&path[i],len - i);
-	path[len - i] = '\0';
-	return(path);
+	temp_str = ft_strjoin(key, "=");
+	if (!temp_str)
+		return ;
+	full_export_str = ft_strjoin(temp_str, path);
+	free(temp_str);
+	if (!full_export_str)
+		return ;
+	export_args[0] = "export";
+	export_args[1] = full_export_str;
+	export_args[2] = NULL;
+	ft_export(envp, export_args);
+	free(full_export_str);
 }
 
-char	*ft_get_home_path(char *path, int cd)
+/*
+** @brief      디렉토리 변경 후 PWD와 OLDPWD 환경 변수를 업데이트합니다.
+** @param old_pwd  chdir을 호출하기 전의 이전 작업 디렉토리 경로
+** @param envp     환경 변수 배열의 포인터
+*/
+static void	update_pwd_vars(const char *old_pwd, char ***envp)
 {
-	char	*env;
-	char	*total_path;
+	char	new_pwd_buffer[1024];
 
-	env = getenv("HOME");
-	if (!env)
-		return (NULL);
-	if(cd == 0)
-		total_path = ft_strjoin(env, &path[1]);
-	else
-		total_path = env;
-	if (!total_path)
-		return (NULL);
-	return (total_path);
-}
-
-int ft_check_path(char **split)
-{	
-	if(ft_get_split_len(split) == 2)
-		return(0);
-	else if(ft_get_split_len(split) > 2)
-		return(0);
-	else
+	set_pwd_env("OLDPWD", old_pwd, envp);
+	if (getcwd(new_pwd_buffer, sizeof(new_pwd_buffer)) != NULL)
 	{
-		if(ft_get_split_len(split) == 1 && ft_strncmp(split[0], "$PWD", 4) == 0)
-			return(2);
-		if(ft_get_split_len(split) <=2 && ft_get_split_len(split) > 0)
-			return(1);
+		set_pwd_env("PWD", new_pwd_buffer, envp);
 	}
-	return(0);
 }
 
-int ft_return_to_home(char *path)
+/*
+** @brief      Resolves the target path for the 'cd' command.
+** @param arg  The argument from the command line (can be NULL).
+** @return     The path to change to, or NULL if resolution fails.
+*/
+static char	*resolve_path(const char *arg)
 {
-	char	*home_path;
-	int		chdir_return;
-	
-	chdir_return = 1;
-	home_path = ft_get_home_path(path, 1);
-	if(home_path)
-		chdir_return = chdir(home_path);
-	if (chdir_return == -1)
-	{
-		write(STDERR_FILENO, " Aucun fichier ou dossier de ce nom", ft_strlen(" Aucun fichier ou dossier de ce nom"));
-		return (1);
-	}
-	return(0);
-	
-}
+	const char	*home;
 
-int	ft_cd(char **args)
-{
-	int		chdir_return;
-	char 	*path;
-	/* 
-		first i check if the path is valide and display the specific message if not.
-		valide arg: cd + 1 argument.
-	*/
-
-	if(ft_check_path(&args[1])  == 2)
-		return(0);
-	else if (ft_check_path(&args[1]) == 0)
+	if (arg == NULL)
 	{
-		write(STDERR_FILENO, " trop d'arguments\n", ft_strlen(" trop d'arguments\n"));
-		return(1);
-	}
-	/* 
-		after, i check if cd had argument. If not, we go home.
-	*/
-	if(ft_get_split_len(args) == 1)
-		return(ft_return_to_home(args[0]));
-	else
-	{
-		/* 
-			We need to separate the cd command from the path and use only the path.
-		*/
-		path = ft_trim_path(args[1]);
-		if (path[0] == '~' )
+		home = getenv("HOME");
+		if (home == NULL)
 		{
-			/* 
-				if the commande had argument, if the argument start by ~ , the home path is the start point.
-			*/
-			path = ft_get_home_path(path, 0);
+			ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO);
+			return (NULL);
 		}
+		return (ft_strdup(home));
 	}
-	/* 
-		follow de path. see man chdir, check the return value. Display error message if necessary.
-	*/
-	chdir_return = chdir(path);
-	if (chdir_return == -1)
+	return (ft_strdup(arg));
+}
+
+/*
+** @brief      내장 명령어 'cd'를 실행합니다.
+*/
+int	ft_cd(char **args, char ***envp)
+{
+	char	*path_to_go;
+	char	old_pwd_buffer[1024];
+
+	if (ft_get_split_len(args) > 2)
 	{
-		write(STDERR_FILENO, " Aucun fichier ou dossier de ce nom", ft_strlen(" Aucun fichier ou dossier de ce nom"));
+		ft_putstr_fd("minishell: cd: too many arguments\n", STDERR_FILENO);
 		return (1);
 	}
+	if (getcwd(old_pwd_buffer, sizeof(old_pwd_buffer)) == NULL)
+	{
+		perror("minishell: cd: getcwd");
+		return (1);
+	}
+	path_to_go = resolve_path(args[1]);
+	if (path_to_go == NULL)
+		return (1);
+	if (chdir(path_to_go) == -1)
+	{
+		perror("minishell: cd");
+		free(path_to_go);
+		return (1);
+	}
+	free(path_to_go);
+	update_pwd_vars(old_pwd_buffer, envp);
 	return (0);
 }
