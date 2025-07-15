@@ -33,7 +33,8 @@ typedef struct s_quote_status	t_quote_status;
 typedef struct s_exec_context	t_exec_context;
 typedef struct s_redir			t_redir;
 
-typedef struct s_exec_context {
+typedef struct s_exec_context
+{
 	char	***envp_ptr;
 	int		l_exit;
 }	t_exec_context;

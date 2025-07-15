@@ -12,21 +12,6 @@
 
 #include "exec.h"
 
-// int	is_numeric(const char *str)
-// {
-// 	if (!str || *str == '\0')
-// 		return (0);
-// 	if (*str == '+' || *str == '-')
-// 		str++;
-// 	while (*str)
-// 	{
-// 		if (!ft_isdigit((unsigned char)*str))
-// 			return (0);
-// 		str++;
-// 	}
-// 	return (1);
-// }
-
 /**
  * @brief Counts the number of tokens that could become arguments.
  */
@@ -37,8 +22,8 @@ static int	count_potential_args(t_token *node)
 
 	count = 0;
 	curr = node;
-	while (curr && (curr->token == CMD || curr->token == BUILTIN \
-		|| curr->token == WORD || curr->token == VAR))
+	while (curr && (curr->token == CMD || curr->token == BUILTIN
+			|| curr->token == WORD || curr->token == VAR))
 	{
 		count++;
 		curr = curr->right;

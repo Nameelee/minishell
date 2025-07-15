@@ -43,13 +43,15 @@
 # define VAR 11
 # define BUILTIN 12
 
-typedef enum e_heredoc_state {
+typedef enum e_heredoc_state
+{
 	HD_NOT_PROCESSED,
 	HD_PROCESSING_FAILED,
 	HD_PROCESSED_OK
 }	t_heredoc_state;
 
-typedef struct s_token {
+typedef struct s_token
+{
 	char			*string;
 	int				token;
 	bool			followed_by_whitespace;
@@ -64,7 +66,8 @@ typedef struct s_token {
 	t_heredoc_state	heredoc_state;
 }	t_token;
 
-typedef struct s_redir {
+typedef struct s_redir
+{
 	int				type;
 	char			*filename;
 	t_token			*heredoc_node;
@@ -74,19 +77,22 @@ typedef struct s_redir {
 /**
  * @brief AST 빌드 중 상태를 관리하는 구조체
  */
-typedef struct s_ast_state {
+typedef struct s_ast_state
+{
 	t_token	**root;
 	t_token	**csc_head;
 	t_token	*new_node;
 }	t_ast_state;
 
-typedef enum e_finalize_quote_type {
+typedef enum e_finalize_quote_type
+{
 	FNL_QUOTE_NONE,
 	FNL_QUOTE_ALL_SINGLE,
 	FNL_QUOTE_ALL_DOUBLE
 }	t_fin_quote;
 
-typedef struct s_word_aggregator {
+typedef struct s_word_aggregator
+{
 	char	**buffer_ptr;
 	bool	*all_s_ptr;
 	bool	*all_d_ptr;
@@ -95,43 +101,50 @@ typedef struct s_word_aggregator {
 	t_token	**list_head_ptr;
 }	t_word_aggregator;
 
-typedef struct s_parse_state {
+typedef struct s_parse_state
+{
 	const char	*str_content;
 	size_t		*current_idx_ptr;
 	size_t		total_len;
 }	t_parse_state;
 
-typedef struct s_quoted_piece_data {
+typedef struct s_quoted_piece_data
+{
 	char	*extracted_str;
 	bool	is_single_quoted_segment;
 	bool	is_double_quoted_segment;
 	bool	op_success;
 }	t_quoted_pdata;
 
-typedef struct s_quote_status {
+typedef struct s_quote_status
+{
 	bool	is_single;
 	bool	is_double;
 }	t_quote_status;
 
-typedef struct s_unquoted_piece_data {
+typedef struct s_unquoted_piece_data
+{
 	char	*extracted_str;
 	bool	op_success;
 }	t_unquot_pdata;
 
-typedef struct s_op_build_state {
+typedef struct s_op_build_state
+{
 	char	op_str[3];
 	int		type;
 	size_t	op_len;
 }	t_op_build_state;
 
-typedef struct s_segment_extraction_result {
+typedef struct s_segment_extraction_result
+{
 	char	*piece_str;
 	bool	is_single;
 	bool	is_double;
 	bool	success;
 }	t_seg_extract;
 
-typedef struct s_word_build_state {
+typedef struct s_word_build_state
+{
 	char	*buffer;
 	bool	all_s_q;
 	bool	all_d_q;
@@ -139,7 +152,8 @@ typedef struct s_word_build_state {
 	int		seg_count;
 }	t_word_build_state;
 
-typedef enum e_tokenize_status {
+typedef enum e_tokenize_status
+{
 	TOKENIZE_SUCCESS_CONTINUE,
 	TOKENIZE_SUCCESS_BREAK,
 	TOKENIZE_ERROR
