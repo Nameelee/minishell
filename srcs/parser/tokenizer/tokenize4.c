@@ -36,9 +36,15 @@ static void	ft_advance_to_closing_quote(t_parse_state *p_state, char quote_char)
 static void	ft_cleanup_on_extraction_error(t_word_aggregator *agg)
 {
 	if (*agg->buffer_ptr)
+	{
 		free(*agg->buffer_ptr);
+		*agg->buffer_ptr = NULL;
+	}	
 	if (agg->list_head_ptr && *(agg->list_head_ptr))
+	{
 		free_token_list(*(agg->list_head_ptr));
+		*(agg->list_head_ptr) = NULL;	
+	}
 }
 
 char	*ft_extract_quoted_segment(t_parse_state *p_state, char quote_char,
@@ -52,7 +58,7 @@ char	*ft_extract_quoted_segment(t_parse_state *p_state, char quote_char,
 	ft_advance_to_closing_quote(p_state, quote_char);
 	if (*(p_state->current_idx_ptr) >= p_state->total_len)
 	{
-		ft_fprintf("", "", "syntax error: unclosed quote\n");
+		ft_fprintf("minishell: ", "syntax error: unclosed quote", "\n");
 		ft_cleanup_on_extraction_error(agg);
 		return (NULL);
 	}

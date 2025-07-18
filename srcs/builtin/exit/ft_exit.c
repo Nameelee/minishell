@@ -20,7 +20,7 @@ int	is_numeric(const char *str)
 		str++;
 	while (*str)
 	{
-		if (!isdigit((unsigned char)*str))
+		if (!ft_isdigit((unsigned char)*str))
 			return (0);
 		str++;
 	}
@@ -68,7 +68,7 @@ void	ft_exit(char **split, int exit_status)
 			}
 			print_exit_message(1);
 		}
-		exit(atoi(split[1]));
+		exit(ft_atoi(split[1]));
 	}
 	exit(exit_status);
 }

@@ -114,11 +114,15 @@ int	execute_toplevel_command(t_token *node, char ***envp, int exit_status)
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 	pid = fork_and_execute_child(node, envp, exit_status, &sa_int_old);
+	if (pid == -1)
+	{
+		sigaction(SIGINT, &sa_int_old, NULL);
+		sigaction(SIGQUIT, &sa_quit_old, NULL);
+		return (1);
+	}
+	exit_status = wait_and_get_status(pid);
 	sigaction(SIGINT, &sa_int_old, NULL);
 	sigaction(SIGQUIT, &sa_quit_old, NULL);
-	if (pid == -1)
-		return (1);
-	exit_status = wait_and_get_status(pid);
 	close_all_heredoc_fds_in_tree(node);
 	return (exit_status);
 }
