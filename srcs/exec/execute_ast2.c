@@ -75,7 +75,6 @@ int	wait_and_get_status(pid_t pid)
 {
 	int		status;
 	int		exit_status;
-	char	*status_str;
 
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status))
@@ -87,11 +86,12 @@ int	wait_and_get_status(pid_t pid)
 			write(STDOUT_FILENO, "\n", 1);
 		else if (WTERMSIG(status) == SIGQUIT)
 		{
-			status_str = ft_itoa(WTERMSIG(status));
-			if (status_str == NULL)
-				return (1);
-			ft_fprintf("Quit: ", status_str, "\n");
-			free(status_str);
+			ft_putstr_fd("Quit", STDERR_FILENO);
+			if (WCOREDUMP(status))
+			{
+				ft_putstr_fd(" (core dumped)", STDERR_FILENO);
+			}
+			ft_putstr_fd("\n", STDERR_FILENO);
 		}
 	}
 	else

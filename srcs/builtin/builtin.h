@@ -45,4 +45,7 @@ void	*print_add_variable_msg(char *var);
 
 char	*ft_get_home_path(char *path, int cd);
 
+int		ft_get_shlvl(char **envp);
+void	ft_set_shlvl(int new_level, char ***envp_ptr);
+
 #endif

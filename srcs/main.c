@@ -64,6 +64,7 @@ int	main(int argc, char **argv, char **envp)
 {
 	char	**dupplicate_env;
 	int		final_exit_status;
+	int		current_shlvl;
 
 	(void)argc;
 	(void)argv;
@@ -71,9 +72,9 @@ int	main(int argc, char **argv, char **envp)
 		return (1);
 	dupplicate_env = ft_duplicate_env(envp);
 	if (!dupplicate_env)
-	{
 		return (EXIT_FAILURE);
-	}
+	current_shlvl = ft_get_shlvl(dupplicate_env);
+	ft_set_shlvl(current_shlvl + 1, &dupplicate_env);
 	final_exit_status = ft_start_minishell("minishell: ", &dupplicate_env);
 	free_duplicated_env(dupplicate_env);
 	return (final_exit_status);

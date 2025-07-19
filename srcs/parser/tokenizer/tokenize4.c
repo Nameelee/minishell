@@ -39,11 +39,11 @@ static void	ft_cleanup_on_extraction_error(t_word_aggregator *agg)
 	{
 		free(*agg->buffer_ptr);
 		*agg->buffer_ptr = NULL;
-	}	
+	}
 	if (agg->list_head_ptr && *(agg->list_head_ptr))
 	{
 		free_token_list(*(agg->list_head_ptr));
-		*(agg->list_head_ptr) = NULL;	
+		*(agg->list_head_ptr) = NULL;
 	}
 }
 
