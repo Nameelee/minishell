@@ -30,12 +30,12 @@ static void	heredoc_input_loop(int write_fd, const char *delimiter)
 				delimiter, "')\n");
 			break ;
 		}
-		if (strcmp(line, delimiter) == 0)
+		if (ft_strcmp(line, delimiter) == 0)
 		{
 			free(line);
 			break ;
 		}
-		write(write_fd, line, strlen(line));
+		write(write_fd, line, ft_strlen(line));
 		write(write_fd, "\n", 1);
 		free(line);
 	}

@@ -81,7 +81,7 @@ t_token	*ft_tokenize(char *str)
 	{
 		return (NULL);
 	}
-	input_len = strlen(str);
+	input_len = ft_strlen(str);
 	while (i < input_len)
 	{
 		status = ft_process_single_token(str, &i, input_len, &token_list_head);

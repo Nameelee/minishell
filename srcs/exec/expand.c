@@ -24,11 +24,11 @@ static int	count_occurrences(const char *str, const char *pattern)
 	temp_ptr = str;
 	while (1)
 	{
-		temp_ptr = strstr(temp_ptr, pattern);
+		temp_ptr = strstr(temp_ptr, pattern);//
 		if (!temp_ptr)
 			break ;
 		count++;
-		temp_ptr += strlen(pattern);
+		temp_ptr += ft_strlen(pattern);
 	}
 	return (count);
 }
@@ -44,17 +44,17 @@ static void	perform_exit_status_replacement(char *dest, const char *src,
 	size_t		status_len;
 
 	current_pos = src;
-	status_len = strlen(status_str);
-	found_pos = strstr(current_pos, "$?");
+	status_len = ft_strlen(status_str);
+	found_pos = strstr(current_pos, "$?");//
 	while (found_pos != NULL)
 	{
-		strncpy(dest, current_pos, found_pos - current_pos);
+		ft_strncpy(dest, current_pos, found_pos - current_pos);
 		dest += (found_pos - current_pos);
-		strcpy(dest, status_str);
+		ft_strcpy(dest, status_str);
 		dest += status_len;
 		current_pos = found_pos + 2;
 	}
-	strcpy(dest, current_pos);
+	ft_strcpy(dest, current_pos);
 }
 
 char	*expand_exit_status(const char *original_str, int exit_status)
@@ -64,14 +64,14 @@ char	*expand_exit_status(const char *original_str, int exit_status)
 	size_t	result_len;
 	int		q_mark_count;
 
-	if (!strstr(original_str, "$?"))
+	if (!strstr(original_str, "$?"))//
 		return (ft_strdup(original_str));
 	status_val_str = ft_itoa(exit_status);
 	if (!status_val_str)
 		return (ft_strdup(original_str));
 	q_mark_count = count_occurrences(original_str, "$?");
-	result_len = strlen(original_str) - (q_mark_count * 2)
-		+ (q_mark_count * strlen(status_val_str));
+	result_len = ft_strlen(original_str) - (q_mark_count * 2)
+		+ (q_mark_count * ft_strlen(status_val_str));
 	expanded_str = (char *)malloc(result_len + 1);
 	if (!expanded_str)
 	{
