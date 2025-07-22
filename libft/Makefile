@@ -28,6 +28,9 @@ SRCS=	ft_putchar_fd.c \
 		ft_memchr.c \
 		ft_memcmp.c \
 		ft_strnstr.c \
+		ft_strncpy.c \
+		ft_strstr.c \
+		ft_strcpy.c \
 		ft_calloc.c \
 		ft_strdup.c \
 		ft_strmapi.c \
@@ -38,6 +41,7 @@ SRCS=	ft_putchar_fd.c \
 		ft_split_len.c \
 		ft_split_clean.c \
 		ft_split_print.c \
+		ft_strcmp.c \
 		ft_strncmp.c \
 		ft_itoa.c \
 		ft_atoi.c \

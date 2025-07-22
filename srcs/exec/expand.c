@@ -24,7 +24,7 @@ static int	count_occurrences(const char *str, const char *pattern)
 	temp_ptr = str;
 	while (1)
 	{
-		temp_ptr = strstr(temp_ptr, pattern);//
+		temp_ptr = ft_strstr(temp_ptr, pattern);
 		if (!temp_ptr)
 			break ;
 		count++;
@@ -45,7 +45,7 @@ static void	perform_exit_status_replacement(char *dest, const char *src,
 
 	current_pos = src;
 	status_len = ft_strlen(status_str);
-	found_pos = strstr(current_pos, "$?");//
+	found_pos = ft_strstr(current_pos, "$?");
 	while (found_pos != NULL)
 	{
 		ft_strncpy(dest, current_pos, found_pos - current_pos);
@@ -64,7 +64,7 @@ char	*expand_exit_status(const char *original_str, int exit_status)
 	size_t	result_len;
 	int		q_mark_count;
 
-	if (!strstr(original_str, "$?"))//
+	if (!ft_strstr(original_str, "$?"))
 		return (ft_strdup(original_str));
 	status_val_str = ft_itoa(exit_status);
 	if (!status_val_str)

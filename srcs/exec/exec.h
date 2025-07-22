@@ -24,6 +24,7 @@
 # include <sys/stat.h>
 # include <readline/readline.h>
 # include <readline/history.h>
+# include "../../libft/libft.h"
 # include "../parser/tokenizer/tokenize.h"
 # include "../builtin/builtin.h"
 # include "../../include/main.h"
